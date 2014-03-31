@@ -154,6 +154,11 @@ function GetMaxInstLen(CPUX: TCPUX): ShortInt;
 {$I OpCodesTables.inc}
 {$I ModRMTable.inc}
 
+{$IF CompilerVersion <20}
+ type
+ PShort = ^SHORT;
+ PUInt64 = ^UInt64;
+{$IFEND}
 implementation
 
 type
@@ -649,7 +654,11 @@ begin
   Inc(Result, Size);
 
   if Result > GetMaxInstLen(CPUX) then
-    Exit(-1);
+   begin
+   Result:=-1;
+   Exit;
+   end;
+   
   Inst^.InstSize := Result;
   Inc(P, Result);
   Inst.NextInst := P;

@@ -27,6 +27,12 @@ interface
 {$R+} // Range check On
 {$ENDIF}
 
+{$IF CompilerVersion <23} //Delphi XE 2 .
+ {$IFNDEF CPUX86}
+ {$DEFINE CPUX86}
+ {$ENDIF}
+{$IFEND}
+
 uses Windows, InstDecode;
 
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
@@ -351,7 +357,7 @@ begin
   CopyInstruction(P^, Q^, Sb);
 
   if Sb > nb then
-    FillNop(Pointer(P + nb), Sb - nb); { Fill the rest bytes with NOP instruction . }
+    FillNop(Pointer(UInt64(P) + nb), Sb - nb); { Fill the rest bytes with NOP instruction . }
 
   if not Size32 then
   begin
