@@ -8,7 +8,7 @@ The library has too function : *DecodeInstruction* and *GetMaxInstLen functions 
  
 
 
-= DecodeInstruction function :=
+== DecodeInstruction function :==
 
 {{{
 function DecodeInstruction(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): ShortInt;
@@ -21,9 +21,13 @@ This function is the main function for this library .It can decode instructions 
    * Immediate value .
    * ...
 
-==Params:== 
+===Params:=== 
 *Addr :* Pointer to the instruction .
+
 *Inst :* Pointer to TInstruction structure.It contains the information returned by the *DecodeInstruction function* .
+
+*CPUX :* Specify the architecture : *CPUX86* for x86 and *CPUX64* for x64 architecture .  
+
 ===TInstruction Structure :===
 {{{
 type
@@ -119,3 +123,26 @@ type
   end;
 }}}
  
+=== Example :===
+{{{
+function Foo: Integer;
+asm
+  MOV EAX,8
+  ADD EAX,2
+end;
+
+var
+  Inst: TInstruction;
+begin
+  Foo;
+  FillChar(Inst, SizeOf(TInstruction), #0);
+  DecodeInstruction(@Foo, @Inst, CPUX32); // Instruction = MOV EAX,8 .
+  ShowMessage(IntToStr(Inst.InstSize)); // InstSize = 5 .
+end;
+}}}
+
+== GetMaxInstLen function :==
+{{{
+function GetMaxInstLen(CPUX: TCPUX): ShortInt;
+}}}
+This function return the maximum instruction length depending on the architecture specified by the CPUX parameter .
