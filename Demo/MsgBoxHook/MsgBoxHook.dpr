@@ -1,4 +1,4 @@
-program Demo;
+program MsgBoxHook;
 
 uses
   Vcl.Forms,
