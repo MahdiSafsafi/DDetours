@@ -27,6 +27,12 @@ interface
 {$R+} // Range check On
 {$ENDIF}
 
+{$IF CompilerVersion <23} // Delphi XE 2 .
+{$IFNDEF CPUX86}
+{$DEFINE CPUX86}
+{$ENDIF}
+{$IFEND}
+
 uses Windows, InstDecode;
 
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
@@ -218,8 +224,8 @@ begin
       We can not copy this instruction directly .
       We need to correct the offset $00000011 .
     }
-    OffsetAddr := Pointer(UInt64(Src) + Inst.Displacement.Value + Inst.InstSize);
-    NewOffset := UInt64(OffsetAddr) - UInt64(Q) - Inst.InstSize;
+    OffsetAddr := Pointer(UINT64(Src) + Inst.Displacement.Value + Inst.InstSize);
+    NewOffset := UINT64(OffsetAddr) - UINT64(Q) - Inst.InstSize;
     if Inst.Displacement.i32 then
     begin
       { Four Bytes Displacement }
