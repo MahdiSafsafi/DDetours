@@ -151,10 +151,17 @@ type
 function DecodeInstruction(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): ShortInt;
 function GetMaxInstLen(CPUX: TCPUX): ShortInt;
 
-{$I OpCodesTables.inc}
-{$I ModRMTable.inc}
+{$IF CompilerVersion <20}
+
+type
+  PShort = ^SHORT;
+  PUInt64 = ^UInt64;
+{$IFEND}
 
 implementation
+
+{$I OpCodesTables.inc}
+{$I ModRMTable.inc}
 
 type
   PSysEAJump = ^TSysEAJump;
@@ -165,6 +172,7 @@ type
   end;
 
 {$WARN NO_RETVAL OFF}
+
 function GetMaxInstLen(CPUX: TCPUX): ShortInt;
 begin
   case CPUX of
@@ -221,6 +229,7 @@ begin
 end;
 
 {$HINTS OFF}
+
 function DecodePreffixes(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): Byte;
 var
   i: Integer;
@@ -311,7 +320,7 @@ begin
   Inst^.Params.Op4 := Entry.Op4;
   Inst^.Params.nOp := n;
 
-  SOp:=0;
+  SOp := 0;
   SOpUsed := False;
   if P^ = $0F then
   begin
@@ -614,7 +623,7 @@ begin
         if Size = 8 then
           Inst^.Immediate.Value := PUInt64(P)^
         else if Size = 4 then
-          Inst^.Immediate.Value := PDword(P)^
+          Inst^.Immediate.Value := PDWORD(P)^
         else if Size = 2 then
           Inst^.Immediate.Value := PWORD(P)^
         else // Size = 1 .
