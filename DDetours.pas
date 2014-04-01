@@ -27,12 +27,6 @@ interface
 {$R+} // Range check On
 {$ENDIF}
 
-{$IF CompilerVersion <23} //Delphi XE 2 .
- {$IFNDEF CPUX86}
- {$DEFINE CPUX86}
- {$ENDIF}
-{$IFEND}
-
 uses Windows, InstDecode;
 
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
@@ -210,9 +204,9 @@ begin
     { e.g: jmp qword ptr [rel $0000ad9c] }
     // Addr := Inst.JumpCall.Address;
     { OffsetAddr = EIP + Offset }
-    OffsetAddr := Pointer(Int64(Src) + Inst.JumpCall.Offset + Inst.InstSize);
+    OffsetAddr := Pointer(UINT64(Src) + Inst.JumpCall.Offset + Inst.InstSize);
     { Offset = OffsetAddr - EIP }
-    NewOffset := Int64(OffsetAddr) - Int64(Q) - Inst.InstSize;
+    NewOffset := Integer(UINT64(OffsetAddr) - UINT64(Q) - Inst.InstSize);
     { Set the new Offset . }
     Inc(Q, Inst.InstSize - Inst.JumpCall.OffsetSize);
     PInteger(Q)^ := NewOffset;
@@ -224,8 +218,8 @@ begin
       We can not copy this instruction directly .
       We need to correct the offset $00000011 .
     }
-    OffsetAddr := Pointer(Int64(Src) + Inst.Displacement.Value + Inst.InstSize);
-    NewOffset := Int64(OffsetAddr) - Int64(Q) - Inst.InstSize;
+    OffsetAddr := Pointer(UInt64(Src) + Inst.Displacement.Value + Inst.InstSize);
+    NewOffset := UInt64(OffsetAddr) - UInt64(Q) - Inst.InstSize;
     if Inst.Displacement.i32 then
     begin
       { Four Bytes Displacement }
@@ -241,10 +235,9 @@ begin
   end
   else if (Inst.JumpCall.Relative) and (Inst.JumpCall.Used) then
   begin
-    { 32 bit }
     { JMP Relative }
     Addr := Inst.JumpCall.Address;
-    NewOffset := Int64(Addr) - Int64(Dst) - Inst.InstSize;
+    NewOffset := UINT64(Addr) - UINT64(Dst) - Inst.InstSize;
     Inc(Q, Inst.InstSize - Inst.JumpCall.OffsetSize);
     case Inst.JumpCall.OffsetSize of
       1: PShortInt(Q)^ := ShortInt(NewOffset);
@@ -282,6 +275,58 @@ begin
   end;
 end;
 
+function AddrAllocMem(Addr: Pointer; Size, flProtect: DWORD): Pointer;
+var
+  mbi: TMemoryBasicInformation;
+  Info: TSystemInfo;
+  P, Q: UINT64;
+  PP: Pointer;
+begin
+  { Alloc memory on the specific nearest address from the Addr . }
+  Result := nil;
+  if Addr = nil then
+  begin
+    Result := VirtualAlloc(nil, Size, MEM_COMMIT, flProtect);
+    Exit;
+  end;
+  P := UINT64(Addr);
+  Q := UINT64(Addr);
+  GetSystemInfo(Info);
+  { Interval = [2GB ..P.. 2GB]= 4GB }
+  if Int64(P - (High(DWORD) div 2)) < 0 then
+    P := 1
+  else
+    P := UINT64(P - (High(DWORD) div 2)); // -2GB .
+  if UINT64(Q + (High(DWORD) div 2)) > High({$IFDEF CPUX64}UINT64 {$ELSE}UINT {$ENDIF}) then
+    Q := High({$IFDEF CPUX64}UINT64 {$ELSE}UINT {$ENDIF})
+  else
+    Q := Q + (High(DWORD) div 2); // + 2GB .
+
+  while P < Q do
+  begin
+    PP := Pointer(P);
+    if VirtualQuery(PP, mbi, Size) = 0 then
+      Break;
+    if (mbi.State and MEM_FREE = MEM_FREE) and (mbi.RegionSize > Size) then
+      { Yes there is a memory that we can use ! }
+      if (mbi.RegionSize >= Info.dwAllocationGranularity) then
+      begin
+        { The RegionSize must be greater than the dwAllocationGranularity . }
+        { The address (PP) must be multiple of the allocation granularity (dwAllocationGranularity) . }
+        PP := Pointer(Info.dwAllocationGranularity * (UINT64(PP) div Info.dwAllocationGranularity) + Info.dwAllocationGranularity);
+        {
+          If PP is multiple of dwAllocationGranularity then alloc memory .
+          If PP is not multiple of dwAllocationGranularity ,the VirtualAlloc will fails .
+        }
+        if UINT64(PP) mod Info.dwAllocationGranularity = 0 then
+          Result := VirtualAlloc(PP, Size, MEM_COMMIT or MEM_RESERVE, flProtect);
+        if Result <> nil then
+          Exit;
+      end;
+    P := UINT64(mbi.BaseAddress) + mbi.RegionSize; // Next region .
+  end;
+end;
+
 function DoInterceptCreate(TargetProc, InterceptProc: Pointer): Pointer;
 var
   P, Q: PByte;
@@ -300,7 +345,11 @@ var
 begin
   P := PByte(TargetProc);
   { Alloc memory for the trampoline routine . }
+{$IFDEF CPUX64}
+  Result := AddrAllocMem(TargetProc, TrampolineSize, PAGE_EXECUTE_READWRITE);
+{$ELSE}
   Result := VirtualAlloc(nil, TrampolineSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+{$ENDIF}
   Q := Result;
   if not Assigned(Result) then
     Exit; // Failed !
@@ -357,7 +406,7 @@ begin
   CopyInstruction(P^, Q^, Sb);
 
   if Sb > nb then
-    FillNop(Pointer(UInt64(P) + nb), Sb - nb); { Fill the rest bytes with NOP instruction . }
+    FillNop(Pointer(P + nb), Sb - nb); { Fill the rest bytes with NOP instruction . }
 
   if not Size32 then
   begin

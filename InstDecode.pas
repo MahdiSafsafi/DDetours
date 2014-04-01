@@ -154,11 +154,6 @@ function GetMaxInstLen(CPUX: TCPUX): ShortInt;
 {$I OpCodesTables.inc}
 {$I ModRMTable.inc}
 
-{$IF CompilerVersion <20}
- type
- PShort = ^SHORT;
- PUInt64 = ^UInt64;
-{$IFEND}
 implementation
 
 type
@@ -439,7 +434,7 @@ begin
             Offset = 401591 .
             Address = Pointer to the address stored on the Offset value = 401792 .
           }
-          Inst^.JumpCall.Address := Integer(Q^);
+          Inst^.JumpCall.Address := UINT(Q^);
           Inst^.JumpCall.Offset := Integer(Inst^.Displacement.Value);
         end
         else
@@ -505,7 +500,7 @@ begin
       begin
         Result := 4;
         Inst^.JumpCall.OffsetSize := 4;
-        Inst^.JumpCall.Address := PInteger(P)^;
+        Inst^.JumpCall.Address := PDWORD(P)^;
       end
       else
       begin
@@ -654,11 +649,7 @@ begin
   Inc(Result, Size);
 
   if Result > GetMaxInstLen(CPUX) then
-   begin
-   Result:=-1;
-   Exit;
-   end;
-   
+    Exit(-1);
   Inst^.InstSize := Result;
   Inc(P, Result);
   Inst.NextInst := P;
