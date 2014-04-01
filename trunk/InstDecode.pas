@@ -658,7 +658,11 @@ begin
   Inc(Result, Size);
 
   if Result > GetMaxInstLen(CPUX) then
-    Exit(-1);
+  begin
+    Result := -1;
+    Exit;
+  end;
+
   Inst^.InstSize := Result;
   Inc(P, Result);
   Inst.NextInst := P;
