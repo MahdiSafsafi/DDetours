@@ -151,8 +151,7 @@ type
 function DecodeInstruction(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): ShortInt;
 function GetMaxInstLen(CPUX: TCPUX): ShortInt;
 
-{$IF CompilerVersion <20}
-
+{$IF CompilerVersion <25} // XE4
 type
   PShort = ^SHORT;
   PUInt64 = ^UInt64;
