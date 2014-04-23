@@ -25,9 +25,7 @@ interface
 
 uses Windows;
 
-{$IFDEF DEBUG}
-{$R+} // Range check On
-{$ENDIF}
+{$I dDefs.inc}
 
 type
   PPrefixes = ^TPrefixes;
@@ -148,10 +146,12 @@ const
 type
   TCPUX = (CPUX32, CPUX64);
 
-function DecodeInstruction(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): ShortInt;
-function GetMaxInstLen(CPUX: TCPUX): ShortInt;
+function DecodeInstruction(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): ShortInt;
+function GetMaxInstLen(const CPUX: TCPUX): ShortInt;
 
-{$IF CompilerVersion <25} // XE4
+{$IF CompilerVersion <25}
+
+// XE4
 type
   PShort = ^SHORT;
   PUInt64 = ^UInt64;
@@ -172,7 +172,7 @@ type
 
 {$WARN NO_RETVAL OFF}
 
-function GetMaxInstLen(CPUX: TCPUX): ShortInt;
+function GetMaxInstLen(const CPUX: TCPUX): ShortInt;
 begin
   case CPUX of
     CPUX32: Result := Max_Inst_Len32;
@@ -185,25 +185,25 @@ begin
   Result := (Value and (1 shl nBit)) <> 0;
 end;
 
-function GetMod(const ModRegRM: Byte): Byte;
+function GetMod(const ModRegRM: Byte): Byte; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := ModRegRM shr 6;
 end;
 
-function GetReg(const ModRegRM: Byte): Byte;
+function GetReg(const ModRegRM: Byte): Byte; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := Byte(ModRegRM shl 2);
   Result := Result shr 5;
 end;
 
-function GetRM(const ModRegRM: Byte): Byte;
+function GetRM(const ModRegRM: Byte): Byte; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   { Result := (ModRegRM shl 5);
     Result := Result shr 5; }
   Result := ModRegRM and 7;
 end;
 
-function GetScale(const SIB: Byte): Byte;
+function GetScale(const SIB: Byte): Byte; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := SIB shr 6;
   case Result of
@@ -214,13 +214,13 @@ begin
   end;
 end;
 
-function GetIndex(const SIB: Byte): Byte;
+function GetIndex(const SIB: Byte): Byte; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := Byte(SIB shl 2);
   Result := Result shr 5;
 end;
 
-function GetBase(const SIB: Byte): Byte;
+function GetBase(const SIB: Byte): Byte; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   { Result := (SIB shl 5);
     Result := Result shr 5; }
@@ -229,7 +229,7 @@ end;
 
 {$HINTS OFF}
 
-function DecodePreffixes(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): Byte;
+function DecodePreffixes(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): Byte;
 var
   i: Integer;
   P: PByte;
@@ -280,7 +280,7 @@ begin
     Result := OneByteOpCodesEntry[Op];
 end;
 
-function DecodeOpCode(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): Byte;
+function DecodeOpCode(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): Byte;
 var
   P: PByte;
   Entry: TOpCodeEntryInfo;
@@ -329,7 +329,8 @@ begin
     SOp := P^; // Secondary OpCode .
     case Op of
       $01: SOpUsed := SOp in [$C1 .. $C4, $C8 .. $C9, $D0 .. $D1, $F8 .. $F9];
-      $38, $39: SOpUsed := SOp in [$00 .. $B, $10, $14 .. $15, $17, $1C, $1D, $1E, $20 .. $25, $28 .. $2B, $30 .. $35, $37 .. $41, $80 .. $81, $F0 .. $F1];
+      $38, $39: SOpUsed := SOp in [$00 .. $B, $10, $14 .. $15, $17, $1C, $1D, $1E, $20 .. $25, $28 .. $2B, $30 .. $35, $37 .. $41, $80 .. $81,
+          $F0 .. $F1];
       $3A: SOpUsed := SOp in [$8 .. $F, $14 .. $17, $20 .. $22, $40 .. $42, $60 .. $63];
     else SOpUsed := False;
     end;
@@ -347,7 +348,7 @@ begin
   Inst^.SOpUsed := SOpUsed;
 end;
 
-function DecodeSIB(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): Byte;
+function DecodeSIB(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): Byte;
 var
   SIB: Byte;
 begin
@@ -364,7 +365,7 @@ begin
   end;
 end;
 
-function DecodeModRM(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): Byte;
+function DecodeModRM(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): Byte;
 var
   P: PByte;
   Flags: Byte;
@@ -400,7 +401,7 @@ begin
   end;
 end;
 
-function DecodeJump(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): Byte;
+function DecodeJump(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): Byte;
 var
   P: PByte;
   Q: Pointer;
@@ -524,7 +525,7 @@ begin
   end;
 end;
 
-function DecodeDisplacement(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): Byte;
+function DecodeDisplacement(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): Byte;
 var
   Size: Byte;
   ModRMF: Byte;
@@ -556,7 +557,7 @@ begin
   Inc(Result, DecodeJump(Addr, Inst, CPUX));
 end;
 
-function DecodeImmediate(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): Byte;
+function DecodeImmediate(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): Byte;
 var
   P: PByte;
   Entry: TOpCodeEntryInfo;
@@ -633,7 +634,7 @@ begin
   end;
 end;
 
-function DecodeInstruction(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): ShortInt;
+function DecodeInstruction(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): ShortInt;
 var
   P: PByte;
   Size: ShortInt;

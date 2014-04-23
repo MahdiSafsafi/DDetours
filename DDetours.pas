@@ -23,18 +23,9 @@ unit DDetours;
 
 interface
 
-{$IFDEF DEBUG}
-{$R+} // Range check On
-{$ENDIF}
-
-{$IF CompilerVersion <23} // Delphi XE 2 .
-{$IFNDEF CPUX86}
-{$DEFINE CPUX86}
-{$ENDIF}
-{$IFEND}
-
 uses Windows, InstDecode;
 
+{$I dDefs.inc}
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 function InterceptRemove(var Trampoline: Pointer): Boolean;
 
@@ -93,17 +84,17 @@ const
 {$DEFINE SkipInt3}
 {$ENDIF}
 
-function HiQword(Value: UINT64): DWORD; overload;
+function HiQword(const Value: UINT64): DWORD; overload; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := (Value shr 32);
 end;
 
-function HiQword(Value: Int64): DWORD; overload;
+function HiQword(const Value: Int64): DWORD; overload; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := (Value shr 32);
 end;
 
-procedure FillNop(Address: Pointer; const Count: Integer);
+procedure FillNop(const Address: Pointer; const Count: Integer); {$IFDEF MustInline}inline; {$ENDIF}
 begin
   FillChar(Address^, Count, opNop);
 end;
@@ -281,7 +272,7 @@ begin
   end;
 end;
 
-function AddrAllocMem(Addr: Pointer; Size, flProtect: DWORD): Pointer;
+function AddrAllocMem(const Addr: Pointer; const Size, flProtect: DWORD): Pointer;
 var
   mbi: TMemoryBasicInformation;
   Info: TSystemInfo;
@@ -303,7 +294,8 @@ begin
     P := 1
   else
     P := UINT64(P - (High(DWORD) div 2)); // -2GB .
-  if UINT64(Q + (High(DWORD) div 2)) > High({$IFDEF CPUX64}UINT64 {$ELSE}UINT {$ENDIF}) then
+  if UINT64(Q + (High(DWORD) div 2)) > High({$IFDEF CPUX64}UINT64 {$ELSE}UINT
+{$ENDIF}) then
     Q := High({$IFDEF CPUX64}UINT64 {$ELSE}UINT {$ENDIF})
   else
     Q := Q + (High(DWORD) div 2); // + 2GB .
@@ -333,7 +325,7 @@ begin
   end;
 end;
 
-function DoInterceptCreate(TargetProc, InterceptProc: Pointer): Pointer;
+function DoInterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 var
   P, Q: PByte;
   PJmp: PJumpInst;
@@ -362,7 +354,8 @@ begin
 
   Sb := 0;
   Size32 := True;
-  Inc(Q, SizeOf(TSaveData)); // Reserved for the extra bytes that hold information about address .
+  Inc(Q, SizeOf(TSaveData));
+  // Reserved for the extra bytes that hold information about address .
   { Offset between the trampoline and the target proc address . }
 {$IFDEF CPUX64}
   PSave := PSaveData(Q);
@@ -412,7 +405,8 @@ begin
   CopyInstruction(P^, Q^, Sb);
 
   if Sb > nb then
-    FillNop(Pointer(P + nb), Sb - nb); { Fill the rest bytes with NOP instruction . }
+    FillNop(Pointer(P + nb), Sb - nb);
+  { Fill the rest bytes with NOP instruction . }
 
   if not Size32 then
   begin
@@ -435,7 +429,8 @@ begin
 {$IFDEF CPUX64}
   Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp); // Sign Extended ! .
 {$ELSE}
-  Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp); // Sign Extended ! .
+  Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp);
+  // Sign Extended ! .
 {$ENDIF}
   { Insert JMP instruction . }
   PJmp := PJumpInst(P);
@@ -454,9 +449,11 @@ begin
 
   { Calculate the offset between the TargetProc variable and the jmp instruction (Trampoline proc) . }
 {$IFDEF CPUX64}
-  Offset := Int64((UINT64(PSave) + SizeOf(Pointer)) - UINT64(Q) - SizeOfJmp); // Sign Extended ! .
+  Offset := Int64((UINT64(PSave) + SizeOf(Pointer)) - UINT64(Q) - SizeOfJmp);
+  // Sign Extended ! .
 {$ELSE}
-  Offset := Integer((UINT(PSave^.D2) - UINT(Q) - SizeOfJmp)); // Sign Extended ! .
+  Offset := Integer((UINT(PSave^.D2) - UINT(Q) - SizeOfJmp));
+  // Sign Extended ! .
 {$ENDIF}
   { Insert JMP instruction . }
   PJmp := PJumpInst(Q);
