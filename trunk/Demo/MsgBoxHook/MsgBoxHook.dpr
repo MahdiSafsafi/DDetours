@@ -3,8 +3,8 @@ program MsgBoxHook;
 uses
   Vcl.Forms,
   uMain in 'uMain.pas' {Form2},
-  DDetours in '..\DDetours.pas',
-  InstDecode in '..\InstDecode.pas';
+  DDetours in '..\..\DDetours.pas',
+  InstDecode in '..\..\InstDecode.pas';
 
 {$R *.res}
 

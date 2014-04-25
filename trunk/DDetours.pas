@@ -26,10 +26,44 @@ interface
 uses Windows, InstDecode;
 
 {$I dDefs.inc}
+{$IFNDEF BuildThreadSafe}
+{$MESSAGE WARN 'BuildThreadSafe not defined , the library is not a thread safe .'}
+{$MESSAGE HINT 'Define BuildThreadSafe to make the library thread safe .'}
+{$ENDIF}
+// ---------------------------------------------------------------------------------
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 function InterceptRemove(var Trampoline: Pointer): Boolean;
 
 implementation
+
+{$IFDEF BuildThreadSafe}
+
+uses TLHelp32;
+
+type
+  TThreadsListID = class
+  private
+    FCount: Integer;
+    FPointer: Pointer;
+    FSize: UINT;
+  public
+    procedure Add(const Value: DWORD);
+    function GetID(const Index: UINT): DWORD;
+    constructor Create; virtual;
+    destructor Destroy; override;
+    property Count: Integer read FCount;
+    property ThreadIDs[const index: UINT]: DWORD read GetID;
+  end;
+
+type
+  TOpenThread = function(dwDesiredAccess: DWORD; bInheritHandle: BOOL; dwThreadId: DWORD): THandle; stdcall;
+
+var
+  OpenThread: TOpenThread;
+  hKernel: THandle;
+  OpenThreadExist: Boolean = False;
+  FreeKernel: Boolean = False;
+{$ENDIF !BuildThreadSafe}
 
 type
 {$IFDEF CPUX86}
@@ -127,11 +161,11 @@ begin
     Result := Inst.OpCode in [$E9, $EB];
     if not Result then
       if Inst.OpCode = $FF then
-        Result := (Inst.ModRM.rReg in [4, 5]);
+        Result := (Inst.ModRM.rReg in [4, 5]); // rReg = extension for opCode !
   end
   else if Inst.nOpCode = 2 then
   begin
-    Result := (HiByte(Inst.OpCode) = 0) and (Inst.ModRM.rReg = 6); // JMPE .
+    Result := (HiByte(Inst.OpCode) = 0) and (Inst.ModRM.rReg = 6); // rReg = extension for opCode ! => JMPE .
   end
   else
     Result := False;
@@ -145,6 +179,9 @@ var
   Op: Word;
   Inst: TInstruction;
 begin
+  { Check if instruction use relative offset .
+    eg : JE -5 .
+  }
   Result := False;
   P := PByte(Addr);
   Op := PWORD(P)^;
@@ -289,7 +326,7 @@ begin
   P := UINT64(Addr);
   Q := UINT64(Addr);
   GetSystemInfo(Info);
-  { Interval = [2GB ..P.. 2GB]= 4GB }
+  { Interval = [2GB ..P.. 2GB] = 4GB }
   if Int64(P - (High(DWORD) div 2)) < 0 then
     P := 1
   else
@@ -354,8 +391,8 @@ begin
 
   Sb := 0;
   Size32 := True;
-  Inc(Q, SizeOf(TSaveData));
-  // Reserved for the extra bytes that hold information about address .
+  Inc(Q, SizeOf(TSaveData)); // Reserved for the extra bytes that hold information about address .
+
   { Offset between the trampoline and the target proc address . }
 {$IFDEF CPUX64}
   PSave := PSaveData(Q);
@@ -378,10 +415,10 @@ begin
     Inc(nb, SizeOf(Pointer));
   end;
 {$ENDIF}
-  //
+  { Calculate the Stolens instructions . }
   while Sb < nb do
   begin
-    { Calculate the Stolens instructions . }
+    { Get information about the instruction . }
     FillChar(Inst, SizeOf(TInstruction), Char(0));
     DecodeInstruction(P, @Inst, CPUX);
 {$IFDEF SkipInt3}
@@ -391,6 +428,7 @@ begin
     Inc(P, Inst.InstSize); // Next Instruction .
   end;
   P := PByte(TargetProc); // Restore the old value .
+
   { The size is not enough to insert the Jump instruction }
   if Sb < nb then
     Exit
@@ -405,8 +443,7 @@ begin
   CopyInstruction(P^, Q^, Sb);
 
   if Sb > nb then
-    FillNop(Pointer(P + nb), Sb - nb);
-  { Fill the rest bytes with NOP instruction . }
+    FillNop(Pointer(P + nb), Sb - nb); // Fill the rest bytes with NOP instruction .
 
   if not Size32 then
   begin
@@ -425,12 +462,12 @@ begin
     PSave := PSaveData(Result);
 
   PSave^.D1 := InterceptProc;
+
   { Calculate the offset between the InterceptProc variable and the jmp instruction (target proc) . }
 {$IFDEF CPUX64}
   Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp); // Sign Extended ! .
 {$ELSE}
-  Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp);
-  // Sign Extended ! .
+  Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp); // Sign Extended ! .
 {$ENDIF}
   { Insert JMP instruction . }
   PJmp := PJumpInst(P);
@@ -449,11 +486,9 @@ begin
 
   { Calculate the offset between the TargetProc variable and the jmp instruction (Trampoline proc) . }
 {$IFDEF CPUX64}
-  Offset := Int64((UINT64(PSave) + SizeOf(Pointer)) - UINT64(Q) - SizeOfJmp);
-  // Sign Extended ! .
+  Offset := Int64((UINT64(PSave) + SizeOf(Pointer)) - UINT64(Q) - SizeOfJmp); // Sign Extended ! .
 {$ELSE}
-  Offset := Integer((UINT(PSave^.D2) - UINT(Q) - SizeOfJmp));
-  // Sign Extended ! .
+  Offset := Integer((UINT(PSave^.D2) - UINT(Q) - SizeOfJmp)); // Sign Extended ! .
 {$ENDIF}
   { Insert JMP instruction . }
   PJmp := PJumpInst(Q);
@@ -469,18 +504,114 @@ begin
   SetMemPermission(P, Sb, OrgProcAccess);
 end;
 
+{$IFDEF BuildThreadSafe }
+
+const
+  THREAD_SUSPEND_RESUME = $0002;
+
+function SuspendAllThreads(RTID: TThreadsListID): Boolean;
+var
+  hSnap: THandle;
+  PID: DWORD;
+  te: TThreadEntry32;
+  nCount: Integer;
+  hThread: THandle;
+begin
+  PID := GetCurrentProcessId;
+
+  hSnap := CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, PID);
+
+  Result := hSnap <> INVALID_HANDLE_VALUE;
+
+  if Result then
+  begin
+    te.dwSize := SizeOf(TThreadEntry32);
+    if Thread32First(hSnap, te) then
+    begin
+      while True do
+      begin
+        if te.th32OwnerProcessID = PID then
+          { Allow the caller thread to access the Detours .
+            => Suspend all threads ,except the current thread .
+          }
+          if te.th32ThreadID <> GetCurrentThreadId then
+          begin
+            hThread := OpenThread(THREAD_SUSPEND_RESUME, False, te.th32ThreadID);
+            if hThread <> INVALID_HANDLE_VALUE then
+            begin
+              nCount := SuspendThread(hThread);
+              if nCount <> DWORD(-1) then // thread's previously was running  .
+                RTID.Add(te.th32ThreadID); // Only add threads that was running before suspending them !
+
+              CloseHandle(hThread);
+            end;
+          end;
+        if not Thread32Next(hSnap, te) then
+          Break;
+      end;
+    end;
+    CloseHandle(hSnap);
+  end;
+end;
+
+function ResumeSuspendedThreads(RTID: TThreadsListID): Boolean;
+var
+  i: Integer;
+  TID: DWORD;
+  hThread: THandle;
+begin
+  Result := False;
+  if Assigned(RTID) then
+    for i := 0 to RTID.Count do
+    begin
+      TID := RTID.ThreadIDs[i];
+      if TID <> DWORD(-1) then
+      begin
+        Result := True;
+        hThread := OpenThread(THREAD_SUSPEND_RESUME, False, TID);
+        if hThread <> INVALID_HANDLE_VALUE then
+        begin
+          ResumeThread(hThread);
+          CloseHandle(hThread);
+        end;
+      end;
+    end;
+end;
+
+{$ENDIF !BuildThreadSafe}
+
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 var
   P: PByte;
   Inst: TInstruction;
+{$IFDEF BuildThreadSafe }
+  { List that hold the running threads
+    that we had make them suspended ! }
+  RTID: TThreadsListID;
+{$ENDIF !BuildThreadSafe}
 begin
   Result := nil;
   if Assigned(TargetProc) and Assigned(InterceptProc) then
   begin
+{$IFDEF BuildThreadSafe }
+    if OpenThreadExist then
+    begin
+      RTID := TThreadsListID.Create;
+      SuspendAllThreads(RTID);
+    end;
+{$ENDIF !BuildThreadSafe}
     FillChar(Inst, SizeOf(TInstruction), Char(0));
     P := PByte(TargetProc);
     P := GetRoot(P, Inst);
     Result := DoInterceptCreate(P, InterceptProc);
+{$IFDEF BuildThreadSafe }
+    if OpenThreadExist then
+    begin
+      ResumeSuspendedThreads(RTID);
+      RTID.Free;
+      RTID := nil;
+    end;
+{$ENDIF !BuildThreadSafe}
   end;
 end;
 
@@ -490,10 +621,20 @@ var
   PSave: PSaveData;
   OrgProcAccess: DWORD;
   Sb: Byte;
+{$IFDEF BuildThreadSafe }
+  RTID: TThreadsListID;
+{$ENDIF !BuildThreadSafe}
 begin
   Result := False;
   if Assigned(Trampoline) then
   begin
+{$IFDEF BuildThreadSafe }
+    if OpenThreadExist then
+    begin
+      RTID := TThreadsListID.Create;
+      SuspendAllThreads(RTID);
+    end;
+{$ENDIF !BuildThreadSafe}
     Q := Trampoline;
     PSave := PSaveData(Q);
     Dec(PByte(PSave), SizeOf(TSaveData));
@@ -504,7 +645,103 @@ begin
     CopyInstruction(Q^, P^, Sb);
     SetMemPermission(P, Sb, OrgProcAccess);
     Result := VirtualFree(PSave, TrampolineSize, MEM_RELEASE);
+{$IFDEF BuildThreadSafe }
+    if OpenThreadExist then
+    begin
+      ResumeSuspendedThreads(RTID);
+      RTID.Free;
+      RTID := nil;
+    end;
+{$ENDIF !BuildThreadSafe}
   end;
 end;
+
+{$IFDEF BuildThreadSafe }
+// ----------------------------------------------------------------------------------------------------------------------
+{ TThreadsListID }
+
+constructor TThreadsListID.Create;
+begin
+  FPointer := nil;
+  FSize := 0;
+end;
+
+destructor TThreadsListID.Destroy;
+begin
+  if Assigned(FPointer) then
+    FreeMem(FPointer);
+  inherited;
+end;
+
+procedure TThreadsListID.Add(const Value: DWORD);
+var
+  Delta: UINT;
+begin
+  if not Assigned(FPointer) then
+  begin
+    { First Item ! }
+    GetMem(FPointer, SizeOf(DWORD));
+    FCount := 0;
+    FSize := 0;
+  end
+  else
+    Inc(FCount); // Not first item !
+
+  { Calculate the delta position between the memory that will
+    hold the value and the pointer value (FPointer). }
+  Delta := FCount * SizeOf(DWORD);
+
+  if Delta <> 0 then
+    ReallocMem(FPointer, Delta + SizeOf(DWORD));
+
+  Inc(PByte(FPointer), Delta);
+  PDWORD(FPointer)^ := Value;
+
+  { Always restore the previous pointer value }
+  Dec(PByte(FPointer), Delta);
+  Inc(FSize, SizeOf(DWORD)); // Size in bytes that is being used .
+end;
+
+function TThreadsListID.GetID(const Index: UINT): DWORD;
+var
+  Delta: UINT;
+begin
+  Result := DWORD(-1); // Default result when fail .
+
+  Delta := Index shl 2; // Index * SizeOf(DWORD) ;
+
+  if (Delta >= 0) and (Delta < FSize) and (Index >= 0) and (Index <= FCount) then
+  begin
+    { Not out of range ! }
+    Inc(PByte(FPointer), Delta);
+    Result := PDWORD(FPointer)^;
+
+    { Always restore the previous pointer value }
+    Dec(PByte(FPointer), Delta);
+  end;
+end;
+
+initialization
+
+@OpenThread := nil;
+FreeKernel := False;
+
+hKernel := GetModuleHandle(kernel32);
+if hKernel <= 0 then
+begin
+  hKernel := LoadLibrary(kernel32);
+  FreeKernel := (hKernel > 0);
+end;
+if hKernel > 0 then
+  @OpenThread := GetProcAddress(hKernel, 'OpenThread');
+
+{ The OpenThread function does not exist on OS version < Win XP }
+OpenThreadExist := (@OpenThread <> nil);
+
+finalization
+
+if (FreeKernel) and (hKernel > 0) then
+  FreeLibrary(hKernel);
+{$ENDIF}
 
 end.

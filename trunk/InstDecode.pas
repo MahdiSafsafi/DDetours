@@ -151,7 +151,7 @@ function GetMaxInstLen(const CPUX: TCPUX): ShortInt;
 
 {$IF CompilerVersion <25}
 
-// XE4
+{ dcc < XE4 }
 type
   PShort = ^SHORT;
   PUInt64 = ^UInt64;
@@ -329,8 +329,7 @@ begin
     SOp := P^; // Secondary OpCode .
     case Op of
       $01: SOpUsed := SOp in [$C1 .. $C4, $C8 .. $C9, $D0 .. $D1, $F8 .. $F9];
-      $38, $39: SOpUsed := SOp in [$00 .. $B, $10, $14 .. $15, $17, $1C, $1D, $1E, $20 .. $25, $28 .. $2B, $30 .. $35, $37 .. $41, $80 .. $81,
-          $F0 .. $F1];
+      $38, $39: SOpUsed := SOp in [$00 .. $B, $10, $14 .. $15, $17, $1C, $1D, $1E, $20 .. $25, $28 .. $2B, $30 .. $35, $37 .. $41, $80 .. $81, $F0 .. $F1];
       $3A: SOpUsed := SOp in [$8 .. $F, $14 .. $17, $20 .. $22, $40 .. $42, $60 .. $63];
     else SOpUsed := False;
     end;
