@@ -9,6 +9,7 @@
 {$ENDIF}
 
 {$DEFINE UseInline}
+{$DEFINE BuildThreadSafe}
 
 {$IF CompilerVersion >17}
 {$DEFINE CanInline}

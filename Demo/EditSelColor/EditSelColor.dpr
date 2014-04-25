@@ -3,8 +3,8 @@ program EditSelColor;
 uses
   Vcl.Forms,
   uMain in 'uMain.pas' {Form2},
-  DDetours in '..\..\..\delphi-detours-library\delphi-detours-library\DDetours.pas',
-  InstDecode in '..\..\..\delphi-detours-library\delphi-detours-library\InstDecode.pas';
+  DDetours in '..\..\DDetours.pas',
+  InstDecode in '..\..\InstDecode.pas';
 
 {$R *.res}
 
