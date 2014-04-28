@@ -36,6 +36,7 @@ uses Windows, InstDecode;
 // ---------------------------------------------------------------------------------
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 function InterceptRemove(var Trampoline: Pointer): Boolean;
+function MakeProcObj(var Proc; const Obj: Pointer): Boolean;
 
 implementation
 
@@ -606,6 +607,66 @@ begin
 end;
 
 {$ENDIF !BuildThreadSafe}
+
+function MakeProcObj(var Proc; const Obj: Pointer): Boolean;
+asm
+  {
+  Default calling convention is :
+  x86 : register .
+  x64 : fastcall.
+  ==>  Do not change ! <==
+  ============================================
+  In order to access TObject variables
+  the compiler need to know the Object
+  that hold this variable .
+
+  When calling TObject.MethodX ,
+  the compiler does not know the TObject
+  So the delphi compiler will use a useful
+  trick .. it will insert the pointer to
+  the object on the EAX/RCX registers .
+
+  eg:Self.DoX(A):
+  MOV EAX,Self
+  MOV EDX,A
+  CALL DoX
+
+  That's mean : the compiler use a specific
+  calling convention to call ObjectMethod
+  => EAX/RCX are always reserved and contains
+  the object pointer value .
+
+  So in order to use Trampoline function
+  we need to make sure that EAX/RCX registers
+  hold the Object pointer value.
+  ============================================
+   }
+
+  {$IFDEF CPUX86}
+  { ->EAX     Proc  . }
+  { ->EDX     Obj   . }
+  { <-AL     Result . }
+  TEST EAX,EAX
+  JE @FAIL
+  TEST EDX,EDX
+  JE @FAIL
+  MOV [EAX+4],EDX
+  {$ELSE !CPUX86}
+  { ->RCX     Proc  . }
+  { ->RDX     Obj   . }
+  { <-AL     Result . }
+  TEST RCX,RCX
+  JE @FAIL
+  TEST RDX,RDX
+  JE @FAIL
+  MOV [RCX+8],RDX
+  {$ENDIF !CPUX86}
+  MOV AL,1   // Result = True
+  JMP @END
+@FAIL:
+  XOR AL,AL // Result = False
+@END:
+end;
 
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 var
