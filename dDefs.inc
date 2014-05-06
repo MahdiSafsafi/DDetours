@@ -13,8 +13,8 @@
 
 {$IF CompilerVersion >17}
 {$DEFINE CanInline}
-{$ENDIF}
+{$IFEND}
 
 {$IF DEFINED(UseInline) and DEFINED(CanInline)}
 {$DEFINE MustInline}
-{$ENDIF}
+{$IFEND}
