@@ -465,7 +465,7 @@ begin
   CopyInstruction(P^, Q^, Sb);
 
   if Sb > nb then
-    FillNop(Pointer(P + nb), Sb - nb);
+    FillNop(Pointer(NativeUInt(P) + nb), Sb - nb);
   // Fill the rest bytes with NOP instruction .
 
   if not Size32 then
