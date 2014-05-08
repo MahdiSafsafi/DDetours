@@ -92,7 +92,7 @@ begin
       if (mbi.State and MEM_COMMIT = MEM_COMMIT) then
       begin
         Inc(TotalSize, Size);
-        s := IntToHex(NativeInt(Key), 8) + '=' + IntToStr(Size);
+        s := IntToHex(NativeUInt(Key), 8) + '=' + IntToStr(Size);
         ValueListEditor1.Strings.Add(s);
       end;
   end;
