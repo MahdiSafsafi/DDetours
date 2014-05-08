@@ -42,7 +42,39 @@ implementation
 
 {$IFDEF BuildThreadSafe}
 
+{$IFNDEF FPC}
+// Delphi
 uses TLHelp32;
+{$ELSE FPC}
+
+type
+  tagTHREADENTRY32 = record
+    dwSize: DWORD;
+    cntUsage: DWORD;
+    th32ThreadID: DWORD; // this thread
+    th32OwnerProcessID: DWORD; // Process this thread is associated with
+    tpBasePri: Longint;
+    tpDeltaPri: Longint;
+    dwFlags: DWORD;
+  end;
+
+  THREADENTRY32 = tagTHREADENTRY32;
+  PTHREADENTRY32 = ^tagTHREADENTRY32;
+  LPTHREADENTRY32 = ^tagTHREADENTRY32;
+  TThreadEntry32 = tagTHREADENTRY32;
+
+  TCreateToolhelp32Snapshot = function(dwFlags, th32ProcessID: DWORD): THandle stdcall;
+  TThread32First = function(hSnapshot: THandle; var lpte: TThreadEntry32): BOOL stdcall;
+  TThread32Next = function(hSnapshot: THandle; var lpte: TThreadEntry32): BOOL stdcall;
+
+var
+  CreateToolhelp32Snapshot: TCreateToolhelp32Snapshot;
+  Thread32First: TThread32First;
+  Thread32Next: TThread32Next;
+
+const
+  TH32CS_SNAPTHREAD = $00000004;
+{$ENDIF FPC}
 
 type
   TThreadsListID = class
@@ -60,15 +92,14 @@ type
   end;
 
 type
-  TOpenThread = function(dwDesiredAccess: DWORD; bInheritHandle: BOOL;
-    dwThreadId: DWORD): THandle; stdcall;
+  TOpenThread = function(dwDesiredAccess: DWORD; bInheritHandle: BOOL; dwThreadId: DWORD): THandle; stdcall;
 
 var
   OpenThread: TOpenThread;
   hKernel: THandle;
   OpenThreadExist: Boolean = False;
   FreeKernel: Boolean = False;
-{$ENDIF !BuildThreadSafe}
+{$ENDIF BuildThreadSafe}
 
 type
 {$IFDEF CPUX86}
@@ -77,22 +108,22 @@ type
   TRelativeJump = Packed Record
     OpCode: Byte;
     Offset: Integer;
-  End;
-{$ELSE}
+  end;
+{$ELSE !CPUX86}
 
   PIndirectJump = ^TIndirectJump;
 
   TIndirectJump = Packed Record
     OpCode: Word;
     Offset: Integer;
-  End;
-{$ENDIF}
+  end;
+{$ENDIF !CPUX86}
 {$IFDEF CPUX86}
 
   TJumpInst = TRelativeJump;
-{$ELSE}
+{$ELSE !CPUX86}
   TJumpInst = TIndirectJump;
-{$ENDIF}
+{$ENDIF !CPUX86}
   PJumpInst = ^TJumpInst;
 
   PSaveData = ^TSaveData;
@@ -113,30 +144,27 @@ const
 {$IFDEF CPUX86}
   CPUX: TCPUX = CPUX32;
   opJmp = opJmpRelative;
-{$ELSE}
+{$ELSE !CPUX86}
   CPUX: TCPUX = CPUX64;
   opJmp = opJmpIndirect;
-{$ENDIF}
+{$ENDIF !CPUX86}
   TrampolineSize = (SizeOf(Pointer) shl 3) + SizeOf(TSaveData);
 
 {$IFDEF DEBUG}
 {$DEFINE SkipInt3}
 {$ENDIF}
 
-function HiQword(const Value: UINT64): DWORD; overload;
-{$IFDEF MustInline}inline; {$ENDIF}
+function HiQword(const Value: UINT64): DWORD; overload; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := (Value shr 32);
 end;
 
-function HiQword(const Value: Int64): DWORD; overload;
-{$IFDEF MustInline}inline; {$ENDIF}
+function HiQword(const Value: Int64): DWORD; overload; {$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := (Value shr 32);
 end;
 
-procedure FillNop(const Address: Pointer; const Count: Integer);
-{$IFDEF MustInline}inline; {$ENDIF}
+procedure FillNop(const Address: Pointer; const Count: Integer); {$IFDEF MustInline}inline; {$ENDIF}
 begin
   FillChar(Address^, Count, opNop);
 end;
@@ -226,8 +254,7 @@ begin
   end;
 end;
 
-function SetMemPermission(const Code: Pointer; const Size: Integer;
-  const Permission: DWORD): DWORD;
+function SetMemPermission(const Code: Pointer; const Size: Integer; const Permission: DWORD): DWORD;
 begin
   Result := 0;
   if Assigned(Code) and (Size > 0) and (Permission > 0) then
@@ -243,8 +270,7 @@ var
   OffsetAddr: Pointer;
 begin
   Q := PByte(Dst);
-  if (CPUX = CPUX64) and (Inst.JumpCall.Used) and
-    (Inst.JumpCall.IndirectDispOnly) then
+  if (CPUX = CPUX64) and (Inst.JumpCall.Used) and (Inst.JumpCall.IndirectDispOnly) then
   begin
     { e.g: jmp qword ptr [rel $0000ad9c] }
     // Addr := Inst.JumpCall.Address;
@@ -256,16 +282,14 @@ begin
     Inc(Q, Inst.InstSize - Inst.JumpCall.OffsetSize);
     PInteger(Q)^ := NewOffset;
   end
-  else if (CPUX = CPUX64) and (Inst.Displacement.Used) and
-    (Inst.Displacement.Relative) then
+  else if (CPUX = CPUX64) and (Inst.Displacement.Used) and (Inst.Displacement.Relative) then
   begin
     {
       mov rax,[rel $00000011]
       We can not copy this instruction directly .
       We need to correct the offset $00000011 .
     }
-    OffsetAddr := Pointer(UINT64(Src) + Inst.Displacement.Value +
-      Inst.InstSize);
+    OffsetAddr := Pointer(UINT64(Src) + Inst.Displacement.Value + Inst.InstSize);
     NewOffset := UINT64(OffsetAddr) - UINT64(Q) - Inst.InstSize;
     if Inst.Displacement.i32 then
     begin
@@ -287,12 +311,9 @@ begin
     NewOffset := UINT64(Addr) - UINT64(Dst) - Inst.InstSize;
     Inc(Q, Inst.InstSize - Inst.JumpCall.OffsetSize);
     case Inst.JumpCall.OffsetSize of
-      1:
-        PShortInt(Q)^ := ShortInt(NewOffset);
-      2:
-        PShort(Q)^ := Short(NewOffset);
-      4:
-        PInteger(Q)^ := NewOffset;
+      1: PShortInt(Q)^ := ShortInt(NewOffset);
+      2: PShort(Q)^ := Short(NewOffset);
+      4: PInteger(Q)^ := NewOffset;
     end;
   end;
 end;
@@ -313,7 +334,7 @@ begin
     S := DecodeInstruction(PSrc, @Inst, CPUX);
 {$IFDEF SkipInt3}
     if PSrc^ <> opInt3 then
-{$ENDIF}
+{$ENDIF SkipInt3}
     begin
       Move(PSrc^, PDst^, S);
       if IsOpRel(PSrc) then
@@ -325,8 +346,7 @@ begin
   end;
 end;
 
-function AddrAllocMem(const Addr: Pointer;
-  const Size, flProtect: DWORD): Pointer;
+function AddrAllocMem(const Addr: Pointer; const Size, flProtect: DWORD): Pointer;
 var
   mbi: TMemoryBasicInformation;
   Info: TSystemInfo;
@@ -365,16 +385,13 @@ begin
       begin
         { The RegionSize must be greater than the dwAllocationGranularity . }
         { The address (PP) must be multiple of the allocation granularity (dwAllocationGranularity) . }
-        PP := Pointer(Info.dwAllocationGranularity *
-          (UINT64(PP) div Info.dwAllocationGranularity) +
-          Info.dwAllocationGranularity);
+        PP := Pointer(Info.dwAllocationGranularity * (UINT64(PP) div Info.dwAllocationGranularity) + Info.dwAllocationGranularity);
         {
           If PP is multiple of dwAllocationGranularity then alloc memory .
           If PP is not multiple of dwAllocationGranularity ,the VirtualAlloc will fails .
         }
         if UINT64(PP) mod Info.dwAllocationGranularity = 0 then
-          Result := VirtualAlloc(PP, Size, MEM_COMMIT or MEM_RESERVE,
-            flProtect);
+          Result := VirtualAlloc(PP, Size, MEM_COMMIT or MEM_RESERVE, flProtect);
         if Result <> nil then
           Exit;
       end;
@@ -393,19 +410,18 @@ var
 {$IFDEF CPUX64}
   Offset: Int64;
   J: UINT64;
-{$ELSE}
+{$ELSE !CPUX64}
   Offset: Integer;
-{$ENDIF}
+{$ENDIF !CPUX64}
   Size32: Boolean;
 begin
   P := PByte(TargetProc);
   { Alloc memory for the trampoline routine . }
 {$IFDEF CPUX64}
   Result := AddrAllocMem(TargetProc, TrampolineSize, PAGE_EXECUTE_READWRITE);
-{$ELSE}
-  Result := VirtualAlloc(nil, TrampolineSize, MEM_COMMIT,
-    PAGE_EXECUTE_READWRITE);
-{$ENDIF}
+{$ELSE !CPUX64}
+  Result := VirtualAlloc(nil, TrampolineSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+{$ENDIF !CPUX64}
   Q := Result;
   if not Assigned(Result) then
     Exit; // Failed !
@@ -421,7 +437,7 @@ begin
   Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp); // Sign Extended ! .
   // {$ELSE}
   // Offset := Integer(UINT(PSave) - UINT(P) - SizeOfJmp); // Sign Extended ! .
-{$ENDIF}
+{$ENDIF CPUX64}
   nb := SizeOfJmp; // Numbers of bytes needed .
 
 {$IFDEF CPUX64}
@@ -436,7 +452,7 @@ begin
     Size32 := False;
     Inc(nb, SizeOf(Pointer));
   end;
-{$ENDIF}
+{$ENDIF CPUX64}
   { Calculate the Stolens instructions . }
   while Sb < nb do
   begin
@@ -445,7 +461,7 @@ begin
     DecodeInstruction(P, @Inst, CPUX);
 {$IFDEF SkipInt3}
     if Inst.OpCode <> opInt3 then
-{$ENDIF}
+{$ENDIF SkipInt3}
       Inc(Sb, Inst.InstSize);
     Inc(P, Inst.InstSize); // Next Instruction .
   end;
@@ -489,10 +505,10 @@ begin
   { Calculate the offset between the InterceptProc variable and the jmp instruction (target proc) . }
 {$IFDEF CPUX64}
   Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp); // Sign Extended ! .
-{$ELSE}
+{$ELSE !CPUX64}
   Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp);
   // Sign Extended ! .
-{$ENDIF}
+{$ENDIF !CPUX64}
   { Insert JMP instruction . }
   PJmp := PJumpInst(P);
   PJmp^.OpCode := opJmp;
@@ -512,10 +528,10 @@ begin
 {$IFDEF CPUX64}
   Offset := Int64((UINT64(PSave) + SizeOf(Pointer)) - UINT64(Q) - SizeOfJmp);
   // Sign Extended ! .
-{$ELSE}
+{$ELSE !CPUX64}
   Offset := Integer((UINT(PSave^.D2) - UINT(Q) - SizeOfJmp));
   // Sign Extended ! .
-{$ENDIF}
+{$ENDIF !CPUX64}
   { Insert JMP instruction . }
   PJmp := PJumpInst(Q);
   PJmp^.OpCode := opJmp;
@@ -562,15 +578,12 @@ begin
           }
           if te.th32ThreadID <> GetCurrentThreadId then
           begin
-            hThread := OpenThread(THREAD_SUSPEND_RESUME, False,
-              te.th32ThreadID);
+            hThread := OpenThread(THREAD_SUSPEND_RESUME, False, te.th32ThreadID);
             if hThread <> INVALID_HANDLE_VALUE then
             begin
               nCount := SuspendThread(hThread);
               if nCount <> DWORD(-1) then // thread's previously was running  .
-                RTID.Add(te.th32ThreadID);
-              // Only add threads that was running before suspending them !
-
+                RTID.Add(te.th32ThreadID); // Only add threads that was running before suspending them !
               CloseHandle(hThread);
             end;
           end;
@@ -606,9 +619,10 @@ begin
     end;
 end;
 
-{$ENDIF !BuildThreadSafe}
+{$ENDIF BuildThreadSafe}
 
 function MakeProcObj(var Proc; const Obj: Pointer): Boolean;
+{$IFNDEF FPC}
 asm
   {
   Default calling convention is :
@@ -667,6 +681,17 @@ asm
   XOR AL,AL // Result = False
 @END:
 end;
+{$ELSE FPC}
+begin
+  Result := False;
+  if Assigned(Pointer(Proc)) and Assigned(Pointer(Obj)) then
+  begin
+    TMethod(Proc).Data := Pointer(Obj);
+    TMethod(Proc).Code := Pointer(Proc);
+    Result := True;
+  end;
+end;
+{$ENDIF FPC}
 
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 var
@@ -676,7 +701,7 @@ var
   { List that hold the running threads
     that we had make them suspended ! }
   RTID: TThreadsListID;
-{$ENDIF !BuildThreadSafe}
+{$ENDIF BuildThreadSafe}
 begin
   Result := nil;
   if Assigned(TargetProc) and Assigned(InterceptProc) then
@@ -688,7 +713,7 @@ begin
       RTID := TThreadsListID.Create;
       SuspendAllThreads(RTID);
     end;
-{$ENDIF !BuildThreadSafe}
+{$ENDIF BuildThreadSafe}
     FillChar(Inst, SizeOf(TInstruction), Char(0));
     P := PByte(TargetProc);
     P := GetRoot(P, Inst);
@@ -699,7 +724,7 @@ begin
       ResumeSuspendedThreads(RTID);
       RTID.Free;
     end;
-{$ENDIF !BuildThreadSafe}
+{$ENDIF BuildThreadSafe}
   end;
 end;
 
@@ -711,7 +736,7 @@ var
   Sb: Byte;
 {$IFDEF BuildThreadSafe }
   RTID: TThreadsListID;
-{$ENDIF !BuildThreadSafe}
+{$ENDIF BuildThreadSafe}
 begin
   Result := False;
   if Assigned(Trampoline) then
@@ -723,13 +748,12 @@ begin
       RTID := TThreadsListID.Create;
       SuspendAllThreads(RTID);
     end;
-{$ENDIF !BuildThreadSafe}
+{$ENDIF BuildThreadSafe}
     Q := Trampoline;
     PSave := PSaveData(Q);
     Dec(PByte(PSave), SizeOf(TSaveData));
     P := PSave^.D2;
-    Dec(P, SizeOfJmp + (Byte(Byte(not PSave^.Size32) and Byte(CPUX = CPUX64)) *
-      SizeOf(Pointer)));
+    Dec(P, SizeOfJmp + (Byte(Byte(not PSave^.Size32) and Byte(CPUX = CPUX64)) * SizeOf(Pointer)));
     Sb := PSave^.Sb;
     OrgProcAccess := SetMemPermission(P, Sb, PAGE_EXECUTE_READWRITE);
     CopyInstruction(Q^, P^, Sb);
@@ -741,7 +765,7 @@ begin
       ResumeSuspendedThreads(RTID);
       RTID.Free;
     end;
-{$ENDIF !BuildThreadSafe}
+{$ENDIF BuildThreadSafe}
   end;
 end;
 
@@ -814,7 +838,11 @@ end;
 
 initialization
 
-@OpenThread := nil;
+{$IFDEF FPC}
+  OpenThread := nil;
+{$ELSE !FPC}
+  @OpenThread := nil;
+{$ENDIF !FPC}
 FreeKernel := False;
 
 hKernel := GetModuleHandle(kernel32);
@@ -824,8 +852,16 @@ begin
   FreeKernel := (hKernel > 0);
 end;
 if hKernel > 0 then
+begin
+{$IFDEF FPC}
+  Pointer(OpenThread) := GetProcAddress(hKernel, 'OpenThread');
+  Pointer(CreateToolhelp32Snapshot) := GetProcAddress(hKernel, 'CreateToolhelp32Snapshot');
+  Pointer(Thread32First) := GetProcAddress(hKernel, 'Thread32First');
+  Pointer(Thread32Next) := GetProcAddress(hKernel, 'Thread32Next');
+{$ELSE !FPC}
   @OpenThread := GetProcAddress(hKernel, 'OpenThread');
-
+{$ENDIF !FPC}
+end;
 { The OpenThread function does not exist on OS version < Win XP }
 OpenThreadExist := (@OpenThread <> nil);
 
@@ -833,6 +869,6 @@ finalization
 
 if (FreeKernel) and (hKernel > 0) then
   FreeLibrary(hKernel);
-{$ENDIF}
+{$ENDIF BuildThreadSafe}
 
 end.

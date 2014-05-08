@@ -149,6 +149,7 @@ type
 function DecodeInstruction(const Addr: Pointer; const Inst: PInstruction; const CPUX: TCPUX): ShortInt;
 function GetMaxInstLen(const CPUX: TCPUX): ShortInt;
 
+{$IFNDEF FPC}
 {$IF CompilerVersion <25}
 
 { dcc < XE4 }
@@ -156,6 +157,13 @@ type
   PShort = ^SHORT;
   PUInt64 = ^UInt64;
 {$IFEND}
+{$ELSE FPC}
+
+type
+  // PShort = ^SHORT;
+  PUInt64 = ^UInt64;
+
+{$ENDIF FPC}
 
 implementation
 
@@ -245,7 +253,7 @@ begin
 
   for i := 0 to 3 do
   begin
-    PrefixUsed := P^ in [prefLock, prefRepn, prefRep, prefCS, prefSS, prefDS, prefES, prefFS, prefGS, pref2E, pref3E, prefSize66, prefAdd67];
+    PrefixUsed := P^ in [prefLock, prefRepn, prefRep, prefCS, prefSS, prefDS, prefES, prefFS, prefGS {$IFNDEF FPC}, pref2E, pref3E{$ENDIF}, prefSize66, prefAdd67];
     if not PrefixUsed then
       if CPUX = CPUX64 then
       begin
@@ -515,9 +523,9 @@ begin
         Result := 6;
         Inst^.JumpCall.OffsetSize := 6;
         SysEAJump := PSysEAJump(P);
-        Value := SysEAJump.W;
+        Value := UInt64(SysEAJump^.W);
         Value := UInt64(Value shl 32);
-        Value := UInt64(Value or SysEAJump.D);
+        Value := UInt64(Value or SysEAJump^.D);
         Inst^.JumpCall.Address := Value;
       end;
     end;
@@ -664,7 +672,7 @@ begin
 
   Inst^.InstSize := Result;
   Inc(P, Result);
-  Inst.NextInst := P;
+  Inst^.NextInst := P;
 end;
 
 end.
