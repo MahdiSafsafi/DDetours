@@ -16,7 +16,7 @@ object Main: TMain
   object LblTotalSize: TLabel
     Left = 71
     Top = 301
-    Width = 154
+    Width = 99
     Height = 13
     Caption = 'Total Memory Used :'
   end
