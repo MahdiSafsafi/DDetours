@@ -167,13 +167,15 @@ var
   LStartColor, LEndColor : TColor;
 begin
   Canvas.Font.Color :=  DockerFontColor;
+   //check the orientation of the dock caption
   if Self.DockCaptionOrientation = dcoHorizontal then
   begin
     Canvas.Pen.Width := 1;
+    //set the color for the border of the caption bar
     Canvas.Pen.Color := DockerBorderColor;
 
     CaptionRect.Top := CaptionRect.Top + 1;
-
+    //set the colors for the captin bar background
     if State.Focused then
     begin
       LStartColor := DockerStartEnabledColor;
@@ -185,13 +187,16 @@ begin
       LEndColor   := DockerEndDisabledColor;
     end;
 
+    //draw the caption bar using a gradient
     GradientFillCanvas(Canvas, LStartColor, LEndColor, Rect(CaptionRect.Left + 1, CaptionRect.Top + 1, CaptionRect.Right, CaptionRect.Bottom), gdVertical);
 
+    //draw the border of the caption bar
     Canvas.Pen.Color := DockerBorderColor;
     with CaptionRect do
       Canvas.Polyline([Point(Left + 2, Top), Point(Right - 2, Top), Point(Right, Top + 2),
         Point(Right, Bottom - 2), Point(Right - 2, Bottom), Point(Left + 2, Bottom), Point(Left, Bottom - 2), Point(Left, Top + 2), Point(Left + 3, Top)]);
 
+    //draw the pin buttton
     CloseRect := GetCloseRect(CaptionRect);
 
     if Self.DockCaptionPinButton <> dcpbNone then
@@ -273,6 +278,7 @@ begin
   end;
 
   Canvas.Brush.Style := bsClear;
+  //draw the text of the caption bar
   if State.Caption <> '' then
   begin
     if State.Focused then
@@ -286,6 +292,7 @@ begin
     Canvas.TextRect(CaptionRect, State.Caption,  [tfEndEllipsis, tfVerticalCenter, tfSingleLine]);
   end;
 
+  //draw the close buttton
   if ShouldDrawClose then
   begin
     LPngImage:=TPNGImage.Create;
@@ -305,7 +312,6 @@ end;
 const
   sModernThemeDrawDockCaption = '@Moderntheme@TModernDockCaptionDrawer@DrawDockCaption$qqrxp20Vcl@Graphics@TCanvasrx18System@Types@TRectrx38Vcl@Captioneddocktree@TParentFormState';
 {$ENDIF}
-
 
 procedure RefreshForms;
 var
