@@ -13,6 +13,8 @@
 //
 // The Original Code is DDetours.pas.
 //
+// Contributor(s): David Millington
+//
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
 // Portions created by Mahdi Safsafi . are Copyright (C) 2013-2014 Mahdi Safsafi .
 // All Rights Reserved.
@@ -34,15 +36,37 @@ uses Windows, InstDecode;
 {$WARN COMPARISON_TRUE OFF}
 {$ENDIF}
 // ---------------------------------------------------------------------------------
-function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
-function InterceptRemove(var Trampoline: Pointer): Boolean;
-function MakeProcObj(var Proc; const Obj: Pointer): Boolean;
+function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer; stdcall;
+function InterceptRemove(var Trampoline: Pointer): Boolean; stdcall;
+function MakeProcObj(var Proc; const Obj: Pointer): Boolean; stdcall;
+
+{$IFDEF MustUseGenerics}
+
+type
+  TDetour<T> = class
+  private
+    FTargetProc: Pointer;
+    FInterceptProc: Pointer;
+    FTrampoline: T;
+    function GetInstalled: Boolean;
+    function PointerToT(const P: Pointer): T;
+    function TToPointer(const AT: T): Pointer;
+    function GetTrampoline: T;
+  public
+    constructor Create(const TargetProc, InterceptProc: T);
+    destructor Destroy; override;
+    procedure Enable;
+    procedure Disable;
+    property Trampoline: T read GetTrampoline; // Call the original
+    property Installed: Boolean read GetInstalled;
+  end;
+{$ENDIF MustUseGenerics}
 
 implementation
 
 {$IFDEF BuildThreadSafe}
-
 {$IFNDEF FPC}
+
 // Delphi
 uses TLHelp32;
 {$ELSE FPC}
@@ -768,6 +792,87 @@ begin
 {$ENDIF BuildThreadSafe}
   end;
 end;
+{ ===================================================== }
+
+{$IFDEF MustUseGenerics }
+{ ***** BEGIN LICENSE BLOCK *****
+  *
+  * The initial developer of the original code (TDetour) is David Millington .
+  *
+  * ***** END LICENSE BLOCK ***** }
+{ ----------------------------------------------------- }
+{ TDetour }
+{ ----------------------------------------------------- }
+
+constructor TDetour<T>.Create(const TargetProc, InterceptProc: T);
+begin
+  inherited Create();
+  FTargetProc := TToPointer(TargetProc);
+  FInterceptProc := TToPointer(InterceptProc);
+  Assert(Assigned(FTargetProc) and Assigned(FInterceptProc), 'Target or replacement methods are not assigned');
+  FTrampoline := T(nil);
+  Enable;
+end;
+
+destructor TDetour<T>.Destroy;
+begin
+  Disable;
+  inherited;
+end;
+
+procedure TDetour<T>.Enable;
+begin
+  if not Installed then
+    FTrampoline := PointerToT(DDetours.InterceptCreate(FTargetProc, FInterceptProc));
+end;
+
+procedure TDetour<T>.Disable;
+var
+  PTrampoline: Pointer;
+begin
+  if Installed then
+  begin
+    PTrampoline := TToPointer(FTrampoline);
+    DDetours.InterceptRemove(PTrampoline);
+    FTrampoline := T(nil);
+  end;
+end;
+
+function TDetour<T>.GetInstalled: Boolean;
+begin
+  Result := Assigned(TToPointer(FTrampoline));
+end;
+
+function TDetour<T>.GetTrampoline: T;
+begin
+  Assert(Installed, 'Detour is not installed; trampoline pointer is nil');
+  Result := FTrampoline;
+end;
+
+function TDetour<T>.PointerToT(const P: Pointer): T;
+var
+  Trampoline: Pointer;
+  Method: T absolute Trampoline;
+begin
+  // Cannot cast from Pointer to T (even though intended use of this class is for T to be a method
+  // type - there is no constraint for this though) so hack it via absolute
+  Trampoline := P;
+  Result := Method;
+end;
+
+function TDetour<T>.TToPointer(const AT: T): Pointer;
+var
+  Method: T;
+  Trampoline: Pointer absolute Method;
+begin
+  // Cannot cast from Pointer to T (even though intended use of this class is for T to be a method
+  // type - there is no constraint for this though) so hack it via absolute
+  Method := AT;
+  Result := Trampoline;
+end;
+
+{$ENDIF MustUseGenerics}
+{ ===================================================== }
 
 {$IFDEF BuildThreadSafe }
 { ----------------------------------------------------- }

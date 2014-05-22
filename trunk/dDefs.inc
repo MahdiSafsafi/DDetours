@@ -1,3 +1,7 @@
+{$DEFINE UseInline}
+{$DEFINE BuildThreadSafe}
+{$DEFINE UseGenerics}
+//----------------------------------------------
 {$IFDEF FPC}
   {$IFDEF CPU64}
     {$IFNDEF CPUX64}
@@ -16,17 +20,21 @@
 {$R+} // Range check On
 {$ENDIF}
 
-{$DEFINE UseInline}
-{$DEFINE BuildThreadSafe}
-
 {$IFNDEF FPC}
   {$IF CompilerVersion >17}
     {$DEFINE CanInline}
   {$IFEND}
+  {$IF CompilerVersion >=20}
+    {$DEFINE GenericsExist }
+  {$IFEND}
 {$IFEND !FPC}
 
 {$IF DEFINED(UseInline) and DEFINED(CanInline)}
-{$DEFINE MustInline}
+  {$DEFINE MustInline}
+{$IFEND}
+
+{$IF DEFINED(GenericsExist) and DEFINED(UseGenerics)}
+  {$DEFINE MustUseGenerics}
 {$IFEND}
 
 
