@@ -423,6 +423,11 @@ begin
   end;
 end;
 
+{$IFOPT Q+}
+{$DEFINE Q_On}
+{$ENDIF}
+{$Q-}
+
 function DoInterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 var
   P, Q: PByte;
@@ -452,8 +457,7 @@ begin
 
   Sb := 0;
   Size32 := True;
-  Inc(Q, SizeOf(TSaveData));
-  // Reserved for the extra bytes that hold information about address .
+  Inc(Q, SizeOf(TSaveData)); // Reserved for the extra bytes that hold information about address .
 
   { Offset between the trampoline and the target proc address . }
 {$IFDEF CPUX64}
@@ -505,8 +509,7 @@ begin
   CopyInstruction(P^, Q^, Sb);
 
   if Sb > nb then
-    FillNop(Pointer(NativeUInt(P) + nb), Sb - nb);
-  // Fill the rest bytes with NOP instruction .
+    FillNop(Pointer(NativeUInt(P) + nb), Sb - nb); // Fill the rest bytes with NOP instruction .
 
   if not Size32 then
   begin
@@ -530,8 +533,7 @@ begin
 {$IFDEF CPUX64}
   Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp); // Sign Extended ! .
 {$ELSE !CPUX64}
-  Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp);
-  // Sign Extended ! .
+  Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp); // Sign Extended ! .
 {$ENDIF !CPUX64}
   { Insert JMP instruction . }
   PJmp := PJumpInst(P);
@@ -569,7 +571,10 @@ begin
   { Restore TargetProc old permission . }
   SetMemPermission(P, Sb, OrgProcAccess);
 end;
-
+{$IFDEF Q_On}
+{$Q+ }
+{$ENDIF Q_On}
+// ------------------------------------------------------------------------------
 {$IFDEF BuildThreadSafe }
 
 const
