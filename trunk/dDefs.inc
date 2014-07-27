@@ -27,7 +27,7 @@
   {$IF CompilerVersion >=20}
     {$DEFINE GenericsExist }
   {$IFEND}
-{$IFEND !FPC}
+{$ENDIF !FPC}
 
 {$IF DEFINED(UseInline) and DEFINED(CanInline)}
   {$DEFINE MustInline}
