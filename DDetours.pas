@@ -20,14 +20,35 @@
 // All Rights Reserved.
 //
 // **************************************************************************************************
+{
+  RECENT CHANGES:
+
+  ==>  July 25,2014 , Mahdi Safsafi :
+  - Added GenericsCast unit to performe casting between generics types .
+
+  ==>  July 24,2014 , Mahdi Safsafi :
+  - Added _PointerToT,_TToPointer functions to fix bug in delphi
+  versions that have bug when using 'absolute' in a generic method .
+  - Added CheckTType function to check if T is procedure .
+}
 
 unit DDetours;
 
 interface
 
-uses Windows, InstDecode;
-
 {$I dDefs.inc}
+
+uses
+  Windows,
+  InstDecode
+{$IFDEF MustUseGenerics}
+    ,
+  SysUtils,
+  Typinfo,
+  GenericsCast
+{$ENDIF MustUseGenerics}
+    ;
+
 {$IFNDEF BuildThreadSafe}
 {$MESSAGE WARN 'BuildThreadSafe not defined , the library is not a thread safe .'}
 {$MESSAGE HINT 'Define BuildThreadSafe to make the library thread safe .'}
@@ -36,14 +57,22 @@ uses Windows, InstDecode;
 {$WARN COMPARISON_TRUE OFF}
 {$ENDIF}
 // ---------------------------------------------------------------------------------
-function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer; stdcall;
+function InterceptCreate(const TargetProc, InterceptProc: Pointer)
+  : Pointer; stdcall;
 function InterceptRemove(var Trampoline: Pointer): Boolean; stdcall;
 function MakeProcObj(var Proc; const Obj: Pointer): Boolean; stdcall;
 
 {$IFDEF MustUseGenerics}
 
 type
+  DetourException = class(Exception);
+
+const
+  SInvalidTType = '%s must be procedure.';
+
+type
   TDetour<T> = class
+    function CheckTType: Boolean;
   private
     FTargetProc: Pointer;
     FInterceptProc: Pointer;
@@ -68,7 +97,8 @@ implementation
 {$IFNDEF FPC}
 
 // Delphi
-uses TLHelp32;
+uses
+  TLHelp32;
 {$ELSE FPC}
 
 type
@@ -87,9 +117,12 @@ type
   LPTHREADENTRY32 = ^tagTHREADENTRY32;
   TThreadEntry32 = tagTHREADENTRY32;
 
-  TCreateToolhelp32Snapshot = function(dwFlags, th32ProcessID: DWORD): THandle stdcall;
-  TThread32First = function(hSnapshot: THandle; var lpte: TThreadEntry32): BOOL stdcall;
-  TThread32Next = function(hSnapshot: THandle; var lpte: TThreadEntry32): BOOL stdcall;
+  TCreateToolhelp32Snapshot = function(dwFlags, th32ProcessID: DWORD)
+    : THandle stdcall;
+  TThread32First = function(hSnapshot: THandle; var lpte: TThreadEntry32)
+    : BOOL stdcall;
+  TThread32Next = function(hSnapshot: THandle; var lpte: TThreadEntry32)
+    : BOOL stdcall;
 
 var
   CreateToolhelp32Snapshot: TCreateToolhelp32Snapshot;
@@ -116,7 +149,8 @@ type
   end;
 
 type
-  TOpenThread = function(dwDesiredAccess: DWORD; bInheritHandle: BOOL; dwThreadId: DWORD): THandle; stdcall;
+  TOpenThread = function(dwDesiredAccess: DWORD; bInheritHandle: BOOL;
+    dwThreadId: DWORD): THandle; stdcall;
 
 var
   OpenThread: TOpenThread;
@@ -178,17 +212,20 @@ const
 {$DEFINE SkipInt3}
 {$ENDIF}
 
-function HiQword(const Value: UINT64): DWORD; overload; {$IFDEF MustInline}inline; {$ENDIF}
+function HiQword(const Value: UINT64): DWORD; overload;
+{$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := (Value shr 32);
 end;
 
-function HiQword(const Value: Int64): DWORD; overload; {$IFDEF MustInline}inline; {$ENDIF}
+function HiQword(const Value: Int64): DWORD; overload;
+{$IFDEF MustInline}inline; {$ENDIF}
 begin
   Result := (Value shr 32);
 end;
 
-procedure FillNop(const Address: Pointer; const Count: Integer); {$IFDEF MustInline}inline; {$ENDIF}
+procedure FillNop(const Address: Pointer; const Count: Integer);
+{$IFDEF MustInline}inline; {$ENDIF}
 begin
   FillChar(Address^, Count, opNop);
 end;
@@ -221,7 +258,8 @@ begin
     Result := Inst.OpCode in [$E9, $EB];
     if not Result then
       if Inst.OpCode = $FF then
-        Result := (Inst.ModRM.rReg in [4, 5]); // rReg = extension for opCode !
+        Result := (Inst.ModRM.rReg in [4, 5]);
+    // rReg = extension for opCode !
   end
   else if Inst.nOpCode = 2 then
   begin
@@ -278,7 +316,8 @@ begin
   end;
 end;
 
-function SetMemPermission(const Code: Pointer; const Size: Integer; const Permission: DWORD): DWORD;
+function SetMemPermission(const Code: Pointer; const Size: Integer;
+  const Permission: DWORD): DWORD;
 begin
   Result := 0;
   if Assigned(Code) and (Size > 0) and (Permission > 0) then
@@ -294,7 +333,8 @@ var
   OffsetAddr: Pointer;
 begin
   Q := PByte(Dst);
-  if (CPUX = CPUX64) and (Inst.JumpCall.Used) and (Inst.JumpCall.IndirectDispOnly) then
+  if (CPUX = CPUX64) and (Inst.JumpCall.Used) and
+    (Inst.JumpCall.IndirectDispOnly) then
   begin
     { e.g: jmp qword ptr [rel $0000ad9c] }
     // Addr := Inst.JumpCall.Address;
@@ -306,14 +346,16 @@ begin
     Inc(Q, Inst.InstSize - Inst.JumpCall.OffsetSize);
     PInteger(Q)^ := NewOffset;
   end
-  else if (CPUX = CPUX64) and (Inst.Displacement.Used) and (Inst.Displacement.Relative) then
+  else if (CPUX = CPUX64) and (Inst.Displacement.Used) and
+    (Inst.Displacement.Relative) then
   begin
     {
       mov rax,[rel $00000011]
       We can not copy this instruction directly .
       We need to correct the offset $00000011 .
     }
-    OffsetAddr := Pointer(UINT64(Src) + Inst.Displacement.Value + Inst.InstSize);
+    OffsetAddr := Pointer(UINT64(Src) + Inst.Displacement.Value +
+      Inst.InstSize);
     NewOffset := UINT64(OffsetAddr) - UINT64(Q) - Inst.InstSize;
     if Inst.Displacement.i32 then
     begin
@@ -335,9 +377,12 @@ begin
     NewOffset := UINT64(Addr) - UINT64(Dst) - Inst.InstSize;
     Inc(Q, Inst.InstSize - Inst.JumpCall.OffsetSize);
     case Inst.JumpCall.OffsetSize of
-      1: PShortInt(Q)^ := ShortInt(NewOffset);
-      2: PShort(Q)^ := Short(NewOffset);
-      4: PInteger(Q)^ := NewOffset;
+      1:
+        PShortInt(Q)^ := ShortInt(NewOffset);
+      2:
+        PShort(Q)^ := Short(NewOffset);
+      4:
+        PInteger(Q)^ := NewOffset;
     end;
   end;
 end;
@@ -370,7 +415,8 @@ begin
   end;
 end;
 
-function AddrAllocMem(const Addr: Pointer; const Size, flProtect: DWORD): Pointer;
+function AddrAllocMem(const Addr: Pointer;
+  const Size, flProtect: DWORD): Pointer;
 var
   mbi: TMemoryBasicInformation;
   Info: TSystemInfo;
@@ -392,9 +438,10 @@ begin
     P := 1
   else
     P := UINT64(P - (High(DWORD) div 2)); // -2GB .
-  if UINT64(Q + (High(DWORD) div 2)) > High({$IFDEF CPUX64}UINT64 {$ELSE}UINT
-{$ENDIF}) then
-    Q := High({$IFDEF CPUX64}UINT64 {$ELSE}UINT {$ENDIF})
+  if UINT64(Q + (High(DWORD) div 2)) > High( {$IFDEF CPUX64}UINT64
+{$ELSE}UINT
+{$ENDIF} ) then
+    Q := High( {$IFDEF CPUX64}UINT64 {$ELSE}UINT {$ENDIF} )
   else
     Q := Q + (High(DWORD) div 2); // + 2GB .
 
@@ -409,13 +456,16 @@ begin
       begin
         { The RegionSize must be greater than the dwAllocationGranularity . }
         { The address (PP) must be multiple of the allocation granularity (dwAllocationGranularity) . }
-        PP := Pointer(Info.dwAllocationGranularity * (UINT64(PP) div Info.dwAllocationGranularity) + Info.dwAllocationGranularity);
+        PP := Pointer(Info.dwAllocationGranularity *
+          (UINT64(PP) div Info.dwAllocationGranularity) +
+          Info.dwAllocationGranularity);
         {
           If PP is multiple of dwAllocationGranularity then alloc memory .
           If PP is not multiple of dwAllocationGranularity ,the VirtualAlloc will fails .
         }
         if UINT64(PP) mod Info.dwAllocationGranularity = 0 then
-          Result := VirtualAlloc(PP, Size, MEM_COMMIT or MEM_RESERVE, flProtect);
+          Result := VirtualAlloc(PP, Size, MEM_COMMIT or MEM_RESERVE,
+            flProtect);
         if Result <> nil then
           Exit;
       end;
@@ -449,7 +499,8 @@ begin
 {$IFDEF CPUX64}
   Result := AddrAllocMem(TargetProc, TrampolineSize, PAGE_EXECUTE_READWRITE);
 {$ELSE !CPUX64}
-  Result := VirtualAlloc(nil, TrampolineSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+  Result := VirtualAlloc(nil, TrampolineSize, MEM_COMMIT,
+    PAGE_EXECUTE_READWRITE);
 {$ENDIF !CPUX64}
   Q := Result;
   if not Assigned(Result) then
@@ -457,12 +508,14 @@ begin
 
   Sb := 0;
   Size32 := True;
-  Inc(Q, SizeOf(TSaveData)); // Reserved for the extra bytes that hold information about address .
+  Inc(Q, SizeOf(TSaveData));
+  // Reserved for the extra bytes that hold information about address .
 
   { Offset between the trampoline and the target proc address . }
 {$IFDEF CPUX64}
   PSave := PSaveData(Q);
-  Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp); // Sign Extended ! .
+  Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp);
+  // Sign Extended ! .
   // {$ELSE}
   // Offset := Integer(UINT(PSave) - UINT(P) - SizeOfJmp); // Sign Extended ! .
 {$ENDIF CPUX64}
@@ -509,7 +562,8 @@ begin
   CopyInstruction(P^, Q^, Sb);
 
   if Sb > nb then
-    FillNop(Pointer(NativeUInt(P) + nb), Sb - nb); // Fill the rest bytes with NOP instruction .
+    FillNop(Pointer(NativeUInt(P) + nb), Sb - nb);
+  // Fill the rest bytes with NOP instruction .
 
   if not Size32 then
   begin
@@ -531,9 +585,11 @@ begin
 
   { Calculate the offset between the InterceptProc variable and the jmp instruction (target proc) . }
 {$IFDEF CPUX64}
-  Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp); // Sign Extended ! .
+  Offset := Int64(UINT64(PSave) - UINT64(P) - SizeOfJmp);
+  // Sign Extended ! .
 {$ELSE !CPUX64}
-  Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp); // Sign Extended ! .
+  Offset := Integer(UINT(InterceptProc) - UINT(P) - SizeOfJmp);
+  // Sign Extended ! .
 {$ENDIF !CPUX64}
   { Insert JMP instruction . }
   PJmp := PJumpInst(P);
@@ -607,12 +663,14 @@ begin
           }
           if te.th32ThreadID <> GetCurrentThreadId then
           begin
-            hThread := OpenThread(THREAD_SUSPEND_RESUME, False, te.th32ThreadID);
+            hThread := OpenThread(THREAD_SUSPEND_RESUME, False,
+              te.th32ThreadID);
             if hThread <> INVALID_HANDLE_VALUE then
             begin
               nCount := SuspendThread(hThread);
               if nCount <> DWORD(-1) then // thread's previously was running  .
-                RTID.Add(te.th32ThreadID); // Only add threads that was running before suspending them !
+                RTID.Add(te.th32ThreadID);
+              // Only add threads that was running before suspending them !
               CloseHandle(hThread);
             end;
           end;
@@ -782,7 +840,8 @@ begin
     PSave := PSaveData(Q);
     Dec(PByte(PSave), SizeOf(TSaveData));
     P := PSave^.D2;
-    Dec(P, SizeOfJmp + (Byte(Byte(not PSave^.Size32) and Byte(CPUX = CPUX64)) * SizeOf(Pointer)));
+    Dec(P, SizeOfJmp + (Byte(Byte(not PSave^.Size32) and Byte(CPUX = CPUX64)) *
+      SizeOf(Pointer)));
     Sb := PSave^.Sb;
     OrgProcAccess := SetMemPermission(P, Sb, PAGE_EXECUTE_READWRITE);
     CopyInstruction(Q^, P^, Sb);
@@ -800,6 +859,7 @@ end;
 { ===================================================== }
 
 {$IFDEF MustUseGenerics }
+
 { ***** BEGIN LICENSE BLOCK *****
   *
   * The initial developer of the original code (TDetour) is David Millington .
@@ -808,13 +868,26 @@ end;
 { ----------------------------------------------------- }
 { TDetour }
 { ----------------------------------------------------- }
+function TDetour<T>.CheckTType: Boolean;
+var
+  LPInfo: PTypeInfo;
+begin
+  LPInfo := TypeInfo(T);
+  Result := SizeOf(T) = SizeOf(Pointer);
+  if Result then
+    Result := LPInfo.Kind = tkProcedure;
+  if not Result then
+    raise DetourException.Create(Format(SInvalidTType, [LPInfo.Name]));
+end;
 
 constructor TDetour<T>.Create(const TargetProc, InterceptProc: T);
 begin
   inherited Create();
+  CheckTType;
   FTargetProc := TToPointer(TargetProc);
   FInterceptProc := TToPointer(InterceptProc);
-  Assert(Assigned(FTargetProc) and Assigned(FInterceptProc), 'Target or replacement methods are not assigned');
+  Assert(Assigned(FTargetProc) and Assigned(FInterceptProc),
+    'Target or replacement methods are not assigned');
   FTrampoline := T(nil);
   Enable;
 end;
@@ -828,7 +901,8 @@ end;
 procedure TDetour<T>.Enable;
 begin
   if not Installed then
-    FTrampoline := PointerToT(DDetours.InterceptCreate(FTargetProc, FInterceptProc));
+    FTrampoline := PointerToT(DDetours.InterceptCreate(FTargetProc,
+      FInterceptProc));
 end;
 
 procedure TDetour<T>.Disable;
@@ -855,25 +929,27 @@ begin
 end;
 
 function TDetour<T>.PointerToT(const P: Pointer): T;
-var
+{ var
   Trampoline: Pointer;
-  Method: T absolute Trampoline;
+  Method: T absolute Trampoline; }
 begin
   // Cannot cast from Pointer to T (even though intended use of this class is for T to be a method
   // type - there is no constraint for this though) so hack it via absolute
-  Trampoline := P;
-  Result := Method;
+  // Trampoline := P;
+  // Result := Method;
+  Result := TGenericsCast<Pointer, T>.Cast(P);
 end;
 
 function TDetour<T>.TToPointer(const AT: T): Pointer;
-var
+{ var
   Method: T;
-  Trampoline: Pointer absolute Method;
+  Trampoline: Pointer absolute Method; }
 begin
   // Cannot cast from Pointer to T (even though intended use of this class is for T to be a method
   // type - there is no constraint for this though) so hack it via absolute
-  Method := AT;
-  Result := Trampoline;
+  // Method := AT;
+  // Result := Trampoline;
+  Result := TGenericsCast<T, Pointer>.Cast(AT);
 end;
 
 {$ENDIF MustUseGenerics}
@@ -965,7 +1041,8 @@ if hKernel > 0 then
 begin
 {$IFDEF FPC}
   Pointer(OpenThread) := GetProcAddress(hKernel, 'OpenThread');
-  Pointer(CreateToolhelp32Snapshot) := GetProcAddress(hKernel, 'CreateToolhelp32Snapshot');
+  Pointer(CreateToolhelp32Snapshot) := GetProcAddress(hKernel,
+    'CreateToolhelp32Snapshot');
   Pointer(Thread32First) := GetProcAddress(hKernel, 'Thread32First');
   Pointer(Thread32Next) := GetProcAddress(hKernel, 'Thread32Next');
 {$ELSE !FPC}
