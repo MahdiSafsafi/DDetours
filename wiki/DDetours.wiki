@@ -5,20 +5,20 @@ The Delphi Detours Library is a library allowing you to insert and remove hook f
 
 The basic idea of this library is to replaces the prologue of the target function with the JMP (unconditional jump) instruction to the Intercepted function. 
 
-This library contains too function : *InterceptCreate* and *InterceptRemove* functions .
+This library contains too function : *!InterceptCreate* and *!InterceptRemove* functions .
 
 == !InterceptCreate ==
 {{{
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 }}}
-This function can hook the TargetProc to the InterceptProc .
+This function can hook the !TargetProc to the !InterceptProc .
 
-*TargetProc :*  A pointer to the target function that you are going to hook . 
+*!TargetProc :*  A pointer to the target function that you are going to hook . 
 
-*InterceptProc :* A pointer to the intercept function , this one will be executed instead of the original function when calling the original function (TargetProc).
+*!InterceptProc :* A pointer to the intercept function , this one will be executed instead of the original function when calling the original function (!TargetProc).
 
-*Return :* The return value is a pointer to the *TrampoLine function *.
-The *TrampoLine function * can execute the original function (TargetProc).
+*Return :* The return value is a pointer to the *!TrampoLine function *.
+The *!TrampoLine function * can execute the original function (!TargetProc).
 
 If the function succeeds, the return value is a pointer to the TrampoLine function .
 
@@ -28,9 +28,9 @@ If the function fails , the return value is *nil*.
 {{{
 function InterceptRemove(var Trampoline: Pointer): Boolean;
 }}}
-This function can remove the hook from the TargetProc .
+This function can remove the hook from the !TargetProc .
 
-*Trampoline :* A pointer to the Trampoline that was returned by the *InterceptCreate* function .It is necessary that you provide a valid parameter .
+*Trampoline :* A pointer to the Trampoline that was returned by the *!InterceptCreate* function .It is necessary that you provide a valid parameter .
 
 If the function succeeds, the return value is *True*.
 
