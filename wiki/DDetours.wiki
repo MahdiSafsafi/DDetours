@@ -20,11 +20,11 @@ This function can hook the !TargetProc to the !InterceptProc .
 *Return :* The return value is a pointer to the *!TrampoLine function *.
 The *!TrampoLine function * can execute the original function (!TargetProc).
 
-If the function succeeds, the return value is a pointer to the TrampoLine function .
+If the function succeeds, the return value is a pointer to the !TrampoLine function .
 
 If the function fails , the return value is *nil*.
 
-== InterceptRemove == 
+== !InterceptRemove == 
 {{{
 function InterceptRemove(var Trampoline: Pointer): Boolean;
 }}}
