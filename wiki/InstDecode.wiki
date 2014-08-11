@@ -15,7 +15,7 @@ function DecodeInstruction(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX)
 }}}
 This function is the main function for this library .It can decode instructions , and retrieve information about the instruction that was decoded such as :
    * Instruction size .
-   * OpCode value .
+   * !OpCode value .
    * Number of operands.
    * Displacement value .
    * Immediate value .
