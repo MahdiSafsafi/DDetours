@@ -4,11 +4,11 @@
 
 *The InstDecode Library* is a library allowing to you to decode intel instruction . It support (x86-x64) architecture .
 
-The library has too function : *DecodeInstruction* and *GetMaxInstLen functions *.
+The library has too function : *!DecodeInstruction* and *!GetMaxInstLen functions *.
  
 
 
-== DecodeInstruction function :==
+== !DecodeInstruction function :==
 
 {{{
 function DecodeInstruction(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): ShortInt;
@@ -24,7 +24,7 @@ This function is the main function for this library .It can decode instructions 
 ===Params:=== 
 *Addr :* Pointer to the instruction .
 
-*Inst :* Pointer to TInstruction structure.It contains the information returned by the *DecodeInstruction function* .
+*Inst :* Pointer to TInstruction structure.It contains the information returned by the *!DecodeInstruction function* .
 
 *CPUX :* Specify the architecture : *CPUX86* for x86 and *CPUX64* for x64 architecture .  
 
@@ -141,7 +141,7 @@ begin
 end;
 }}}
 
-== GetMaxInstLen function :==
+== !GetMaxInstLen function :==
 {{{
 function GetMaxInstLen(CPUX: TCPUX): ShortInt;
 }}}
