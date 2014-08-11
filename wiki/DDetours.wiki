@@ -7,7 +7,7 @@ The basic idea of this library is to replaces the prologue of the target functio
 
 This library contains too function : *InterceptCreate* and *InterceptRemove* functions .
 
-== InterceptCreate ==
+== !InterceptCreate ==
 {{{
 function InterceptCreate(const TargetProc, InterceptProc: Pointer): Pointer;
 }}}
