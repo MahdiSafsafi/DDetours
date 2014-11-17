@@ -144,7 +144,7 @@ In this new version , DDL generate better opcodes for branch and for nop instruc
 
 <u>*Branch instructions:*</u>
 
-It calculate the offset first then it decides what's the perfect branch/jump to use :
+DDL calculate the offset first then it decides what's the perfect branch/jump to use :
   # JMP Rel8
   # JMP Rel16 (x32 only)
   # JMP Rel32
@@ -157,7 +157,9 @@ Using better jmp will result in a small trampoline size.
 <u>*Nop instructions:*</u>
 
 DDL use Multi Bytes Nop instructions instead of the traditional (Nop N) instructions.
+
 The use of MultiBytesNop is determined by your CPU.
+
 if your CPU support MultiBytesNop ,DDL will use it when it's possible,Otherwise
 it use traditional Nop instructions.
 
