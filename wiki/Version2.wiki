@@ -15,7 +15,7 @@
 
 The new version introduce a new hooking model architecture , allowing support for multi hooks as well as single hook.
 
-Whatever , your hook is instaled from you application process or via (dll,..),DDL will mange your hook to run without problems with others hooks.
+Whatever , your hook is installed from you application process or via (dll,..),DDL will mange your hook to run without problems with others hooks.
 
 https://dl.dropboxusercontent.com/u/99625333/imgs/DDL.png
 
@@ -37,6 +37,8 @@ With this new architecture , DDL guaranties:
 == Multi Hooking==
   * A target function can be hooked by *several hooks.*
   * Calling TrampoLine will result in calling next installed hook.
+  * The last caller for TrampoLine excute the original code.
+
 You can think like functions overriding inside a class.
 
 == Detecting Hook==
@@ -140,7 +142,9 @@ DesktopShellFolder := GetDesktopShellFolder;
 
 ==Generate better opcodes==
 In this new version , DDL generate better opcodes for branch and for nop instructions.
-For branch instructions:
+
+<u>*Branch instructions:*</u>
+
 It calculate the offset first then it decides what's the perfect branch/jump to use :
   # JMP Rel8
   # JMP Rel16 (x32 only)
@@ -150,7 +154,9 @@ It calculate the offset first then it decides what's the perfect branch/jump to 
   # JMP Rip Zero (x64 only)
 
 Using better jmp will result in a small trampoline size.
-For Nop:
+
+<u>*Nop instructions:*</u>
+
 DDL use Multi Bytes Nop instructions instead of the traditional (Nop N) instructions.
 The use of MultiBytesNop is determined by your CPU.
 if your CPU support MultiBytesNop ,DDL will use it when it's possible,Otherwise
@@ -158,7 +164,8 @@ it use traditional Nop instructions.
 
 ==InstDecode Library==
 The new InstDecode Library includes the following updates :
-  * Updated opcodes map .
+  * Updating opcodes map .
+  * Improve Decoding Process .=> Very faster than the old one !
   * Adding support to three byte opcodes escape Table.
   * Adding support to vex decoding (vex three & two byte).
   * Adding support to groups opcodes instructions.
@@ -166,7 +173,6 @@ The new InstDecode Library includes the following updates :
   * Adding support to 16-bits ModRm .
   * Adding support to handling errors.
   * Adding support for mandatory prefixes.
-  * Improve Decoding Process .=> Very faster than the old one !
   * Reduce memory usage .
   * Removing inused fields.
   * Better support for REX prefix.
