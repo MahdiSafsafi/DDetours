@@ -20,7 +20,6 @@ Whatever , your hook is installed from you application process or via (dll,..),D
 https://dl.dropboxusercontent.com/u/99625333/imgs/DDL.png
 
 With this new architecture , DDL guaranties:
-
   * New hooks will never override valid adjacent routines.
   * A single TrampoLine function for all installed hooks.
   * The TrampoLine is as much as possible small in size.  
