@@ -1,3 +1,4 @@
+#summary Delphi Detours Library version 2 .
 = Delphi Detours Library version 2 =
 
 = Major changes=
