@@ -1467,6 +1467,7 @@ begin
     Inc(Result, nz);
     Inc(sz, iz);
   end;
+  FreeMemory(PInst);
 end;
 
 function GetInterfaceMethodPtr(const PInterface; MethodIndex: Integer): PByte;
@@ -1863,6 +1864,7 @@ begin
 
     FillNop(PDscr^.ExMem^, SizeOfAlloc);
     FreeMem(PDscr^.Trampo^.PData);
+    FreeMem(PDscr^.Trampo);
 
     if Assigned(PDscr^.ExMem) then
     begin
@@ -1911,6 +1913,7 @@ begin
   if Result = 0 then
     RemoveDescriptor(PDscr);
 
+  FreeMem(PNxtHook);
 end;
 
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer;
