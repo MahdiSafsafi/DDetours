@@ -4,13 +4,13 @@
 = Major changes=
 
   # Introducing new hooking model architecture.
-  # Many BugFix
+  # Many !BugFix
   # Adding multi hook support.
   # Detecting Hook.
   # Introducing instructions maping feature.
   # Adding COM object hooking support.
   # Generate better opcodes.
-  # New InstDecode Library
+  # New !InstDecode Library
 
 == New hooking model architecture==
 
@@ -22,22 +22,22 @@ https://dl.dropboxusercontent.com/u/99625333/imgs/DDL.png
 
 With this new architecture , DDL guaranties:
   * New hooks will never override valid adjacent routines.
-  * A single TrampoLine function for all installed hooks.
-  * The TrampoLine is as much as possible small in size.  
+  * A single !TrampoLine function for all installed hooks.
+  * The !TrampoLine is as much as possible small in size.  
   * Removing a hook does not affect others hooks.
 
-== BugFix==
+== !BugFix==
 
   * Fix instructions decoding related bugs.
   * Fix Memory allocation bug.
   * Fix Branch calculation.
-  * Fix VirtualFree bug.
+  * Fix !VirtualFree bug.
   * Fix hooking functions that have many jmp before entering main implementation.
 
 == Multi Hooking==
   * A target function can be hooked by *several hooks.*
-  * Calling TrampoLine will result in calling next installed hook.
-  * The last caller for TrampoLine excute the original code.
+  * Calling !TrampoLine will result in calling next installed hook.
+  * The last caller for !TrampoLine execute the original code.
 
 You can think like functions overriding inside a class.
 
@@ -56,7 +56,7 @@ DDL will try to correct relative offset when it's possible, however when the new
 
 https://dl.dropboxusercontent.com/u/99625333/imgs/Maping.png
 
-This process is used only when DDL detect that excuting TrampoLine routine may fail.
+This process is used only when DDL detect that executing a !TrampoLine routine may fail.
 
 ==COM object/Interface hooking support==
 The new version provide support for hooking methods declared inside interface.
@@ -159,30 +159,30 @@ Using better jmp will result in a small trampoline size.
 
 DDL use Multi Bytes Nop instructions instead of the traditional (Nop N) instructions.
 
-The use of MultiBytesNop is determined by your CPU.
+The use of !MultiBytesNop is determined by your CPU.
 
-if your CPU support MultiBytesNop ,DDL will use it when it's possible,Otherwise
+if your CPU support !MultiBytesNop ,DDL will use it when it's possible,Otherwise
 it use traditional Nop instructions.
 
-==InstDecode Library==
-The new InstDecode Library includes the following updates :
+==!InstDecode Library==
+The new !InstDecode Library includes the following updates :
   * Updating opcodes map .
   * Improve Decoding Process .=> Very faster than the old one !
   * Adding support to three byte opcodes escape Table.
   * Adding support to vex decoding (vex three & two byte).
   * Adding support to groups opcodes instructions.
   * Adding support to decode invalid opcode .
-  * Adding support to 16-bits ModRm .
+  * Adding support to 16-bits !ModRm .
   * Adding support to handling errors.
   * Adding support for mandatory prefixes.
   * Reduce memory usage .
   * Removing inused fields.
   * Better support for REX prefix.
-  * Reduce OpCodesTable data size (the old : 8670 bytes => the new one : 1020 bytes !)
-  * BugFix : FPU instructions length.
-  * BugFix : Invalid instructions on x64/x32.
-  * BugFix : Calculating branch destination.
-  * BugFix : Instructions that use two immediat .
-  * BugFix : Invalid instructions .
-  * BugFix : Invalid instructions for some mandatory prefixes.
+  * Reduce !OpCodesTable data size (the old : 8670 bytes => the new one : 1020 bytes !)
+  * !BugFix : FPU instructions length.
+  * !BugFix : Invalid instructions on x64/x32.
+  * !BugFix : Calculating branch destination.
+  * !BugFix : Instructions that use two immediat .
+  * !BugFix : Invalid instructions .
+  * !BugFix : Invalid instructions for some mandatory prefixes.
   * Many Others Bug Fix.
