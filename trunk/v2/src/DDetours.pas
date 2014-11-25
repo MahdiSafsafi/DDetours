@@ -13,6 +13,10 @@
 //
 // The Original Code is DDetours.pas.
 //
+// Contributor(s):
+//                David Millington
+//                RRUZ
+//
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
 // Portions created by Mahdi Safsafi . are Copyright (C) 2013-2014 Mahdi Safsafi .
 // All Rights Reserved.
