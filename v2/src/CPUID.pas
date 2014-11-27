@@ -98,7 +98,7 @@ asm
   PUSH RCX
   POPFQ
   POP RCX
-  {$ENDIF}
+  {$ENDIF CPUX86}
 end;
 
 procedure ___CallCPUID(const ID: NativeInt; var CPUIDStruct);
@@ -108,19 +108,21 @@ asm
   EXECUTING CPUID INSTRUCTION !
    }
   {$IFDEF CPUX86}
-  PUSHAD
+  PUSH EDI
+  PUSH ECX
+  PUSH EBX
   MOV EDI,EDX
   CPUID
   MOV EDI.TCPUIDStruct.rEAX,EAX
   MOV EDI.TCPUIDStruct.rEBX,EBX
   MOV EDI.TCPUIDStruct.rECX,ECX
   MOV EDI.TCPUIDStruct.rEDX,EDX
-  POPAD
+  POP EBX
+  POP ECX
+  POP EDI
   {$ELSE !CPUX86}
   PUSH R9
-  PUSH RAX
   PUSH RBX
-  PUSH RCX
   PUSH RDX
   MOV RAX,RCX
   MOV R9,RDX
@@ -130,11 +132,67 @@ asm
   MOV R9.TCPUIDStruct.rECX,ECX
   MOV R9.TCPUIDStruct.rEDX,EDX
   POP RDX
-  POP RCX
   POP RBX
-  POP RAX
   POP R9
-  {$ENDIF}
+  {$ENDIF CPUX86}
+end;
+
+function ___IsAVXSupported: Boolean;
+asm
+  {
+  Checking for AVX support requires 3 steps:
+
+  1) Detect CPUID.1:ECX.OSXSAVE[bit 27] = 1
+  => XGETBV enabled for application use
+
+  2) Detect CPUID.1:ECX.AVX[bit 28] = 1
+  => AVX instructions supported.
+
+  3) Issue XGETBV and verify that XCR0[2:1] = ‘11b’
+  => XMM state and YMM state are enabled by OS.
+
+   }
+
+  { Steps : 1 and 2 }
+  {$IFDEF CPUX64}
+  MOV RAX, 1
+  PUSH RCX
+  PUSH RBX
+  PUSH RDX
+  {$ELSE !CPUX64}
+  MOV EAX, 1
+  PUSH ECX
+  PUSH EBX
+  PUSH EDX
+  {$ENDIF CPUX64}
+  CPUID
+  AND ECX, $018000000
+  CMP  ECX, $018000000
+  JNE  @@NOT_SUPPORTED
+  XOR  ECX,ECX
+  {
+  Delphi does not support XGETBV !
+  => We need to use the XGETBV opcodes !
+   }
+  DB $0F DB $01 DB $D0 // XGETBV
+  { Step :3 }
+  AND EAX, $06
+  CMP  EAX, $06
+  JNE @@NOT_SUPPORTED
+  MOV EAX, 1
+  JMP @@END
+@@NOT_SUPPORTED:
+  XOR EAX,EAX
+@@END:
+  {$IFDEF CPUX64}
+  POP RDX
+  POP RBX
+  POP RCX
+  {$ELSE !CPUX64}
+  POP EDX
+  POP EBX
+  POP ECX
+  {$ENDIF CPUX64}
 end;
 
 procedure CallCPUID(const ID: NativeUInt; var CPUIDStruct: TCPUIDStruct);
@@ -143,7 +201,7 @@ begin
   if not CPUIDSupported then
     raise Exception.Create('CPUID instruction not supported.')
   else
-  ___CallCPUID(ID, CPUIDStruct);
+    ___CallCPUID(ID, CPUIDStruct);
 end;
 
 function IsCPUIDSupported: Boolean;
@@ -167,61 +225,6 @@ begin
   P := PByte(Info) + 4; // Skip EAX !
   Move(P^, PByte(@Result[0])^, 12);
   FreeMemory(Info);
-end;
-
-function __IsAVXSupported: Boolean;
-asm
-  {
-  Checking for AVX support requires 3 steps:
-
-  1) Detect CPUID.1:ECX.OSXSAVE[bit 27] = 1
-  => XGETBV enabled for application use
-
-  2) Detect CPUID.1:ECX.AVX[bit 28] = 1
-  => AVX instructions supported.
-
-  3) Issue XGETBV and verify that XCR0[2:1] = ‘11b’
-  => XMM state and YMM state are enabled by OS.
-
-   }
-
-  { Steps : 1 and 2 }
-  MOV EAX, 1
-  {$IFDEF CPUX64}
-  PUSH RAX
-  PUSH RBX
-  PUSH RCX
-  PUSH RDX
-  {$ELSE !CPUX64}
-  PUSHAD
-  {$ENDIF CPUX64}
-  CPUID
-  AND ECX, $018000000
-  CMP  ECX, $018000000
-  JNE  @@NOT_SUPPORTED
-  MOV  ECX, 0
-  {
-  Delphi does not support XGETBV !
-  => We need to use the XGETBV opcodes !
-   }
-  DB $0F DB $01 DB $D0 // XGETBV
-  { Step :3 }
-  AND EAX, $06
-  CMP  EAX, $06
-  JNE @@NOT_SUPPORTED
-  MOV EAX, 1
-  JMP @@END
-@@NOT_SUPPORTED:
-  MOV EAX, 0
-@@END:
-  {$IFDEF CPUX64}
-  POP RDX
-  POP RCX
-  POP RBX
-  POP RAX
-  {$ELSE !CPUX64}
-  POPAD
-  {$ENDIF CPUX64}
 end;
 
 procedure __Init__;
@@ -252,7 +255,7 @@ begin
       $F00, $600:
         Include(CPUInsts, iMultiNop);
     end;
-    if __IsAVXSupported then
+    if ___IsAVXSupported then
       Include(CPUEncoding, VEX);
   end;
 end;
