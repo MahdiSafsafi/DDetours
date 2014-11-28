@@ -14,8 +14,8 @@
 // The Original Code is DDetours.pas.
 //
 // Contributor(s):
-//                David Millington
-//                RRUZ
+// David Millington
+// RRUZ
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
 // Portions created by Mahdi Safsafi . are Copyright (C) 2013-2014 Mahdi Safsafi .
@@ -1015,10 +1015,10 @@ begin
     // Opcsz := GetInstOpCodes(PInst, POpc);
     Offset := Int64(UInt64(PInst^.Branch.Target) - UInt64(PQ) - 6);
     Relsz := GetInt64Size(Offset);
-  {$IFDEF CPUX64}
+{$IFDEF CPUX64}
     if Relsz = ops16bits then
       Relsz := ops32bits;
-  {$ENDIF CPUX64}
+{$ENDIF CPUX64}
     if PInst^.OpType and otJcc = 0 then
     begin
       { Not Jcc ! }
@@ -1042,7 +1042,7 @@ begin
             am16:
               begin
                 { Dec CX ! }
-  {$IFDEF CPUX64}
+{$IFDEF CPUX64}
                 { . $49 result in REX
                   ==> Use $FF group !
                 }
@@ -1052,25 +1052,25 @@ begin
                 Inc(PQ);
                 PQ^ := $C9;
                 Inc(PQ);
-  {$ELSE !CPUX64}
+{$ELSE !CPUX64}
                 PQ^ := opPrfOpSize;
                 Inc(PQ);
                 PQ^ := $49;
                 Inc(PQ);
-  {$ENDIF CPUX64}
+{$ENDIF CPUX64}
               end;
             am32:
               begin
                 { Dec ECX ! }
-  {$IFDEF CPUX64}
+{$IFDEF CPUX64}
                 PQ^ := $FF;
                 Inc(PQ);
                 PQ^ := $C9;
                 Inc(PQ);
-  {$ELSE !CPUX64}
+{$ELSE !CPUX64}
                 PQ^ := $49;
                 Inc(PQ);
-  {$ENDIF CPUX64}
+{$ENDIF CPUX64}
               end;
             am64:
               begin
@@ -1729,7 +1729,7 @@ begin
           }
           InsertJmp(P, @PDscr^.CodeEntry, fJmpType, @PDscr^.DscrAddr);
         end;
-  {$IFDEF CPUX64}
+{$IFDEF CPUX64}
       2:
         begin
           {
@@ -1764,7 +1764,7 @@ begin
           }
           InsertJmp(P, @PDscr^.CodeEntry, tJmpRipZ, nil);
         end;
-  {$ENDIF CPUX64}
+{$ENDIF CPUX64}
     end;
 
     {
@@ -1773,12 +1773,12 @@ begin
       ==> This JMP will return to TargetProc to allow
       executing originals instructions.
     }
-  {$IFDEF CPUX64}
+{$IFDEF CPUX64}
     // InsertJmp(T + Tsz, P + JmpTypeToSize[fJmpType], tJmpRipZ);
     InsertJmp(T + Tsz, P + Sb, tJmpRipZ);
-  {$ELSE !CPUX64}
+{$ELSE !CPUX64}
     InsertJmp(T + Tsz, P + Sb, tJmpMem32, T + Tsz + 6);
-  {$ENDIF CPUX64}
+{$ENDIF CPUX64}
     { Save LPExMem ==> we need it when deleting descriptor }
     PDscr^.ExMem := LPExMem;
 
@@ -1969,6 +1969,8 @@ function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility)
 var
   Intercept: TIntercept;
 begin
+  if not Assigned(Trampo) then
+    Exit(-1);
   Intercept := TIntercept.Create(Options);
   try
     Result := Intercept.RemoveHook(Trampo);
