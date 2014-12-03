@@ -1455,12 +1455,12 @@ begin
     nz := iz;
     if PInst^.Disp.Flags and (dfUsed or dfRip) = (dfUsed or dfRip) then
       nz := CorrectRipDisp(PInst, Q)
-    else if PInst^.Branch.Falgs or bfRel = bfRel then
+    else if (PInst^.Branch.Falgs and bfRel = bfRel) then
     begin
       { Instruction use relative offset }
-      if PInst^.OpType = otJMP then
+      if (PInst^.OpType = otJMP) then
         nz := CorrectJmpRel(PInst, Q)
-      else if PInst^.OpType = otCALL then
+      else if (PInst^.OpType = otCALL) then
         nz := CorrectCallRel(PInst, Q)
       else
         nz := CorrectJ(PInst, Q)
