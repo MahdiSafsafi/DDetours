@@ -67,24 +67,24 @@ type
 
 const
   { CPUX }
-  CPUX32 = 0; { x86-32 }
-  CPUX64 = 1; { x86-64 }
+  CPUX32 = $00; { x86-32 }
+  CPUX64 = $01; { x86-64 }
   CPUX = {$IFDEF CPUX64}CPUX64 {$ELSE}CPUX32 {$ENDIF};
 
   { Address Mode }
-  am16 = 1; { 16-bit addressing mode }
-  am32 = 2; { 32-bit addressing mode }
-  am64 = 3; { 64-bit addressing mode }
+  am16 = $01; { 16-bit addressing mode }
+  am32 = $02; { 32-bit addressing mode }
+  am64 = $03; { 64-bit addressing mode }
   { Default Addressing Mode Depending on CPUX (32/64)bit }
   DefAddressMode: array [0 .. 1] of Byte = (am32, am64);
   { Used to select Addressing Mode when Address Mode Prefix is used ! }
   AddressMode: array [0 .. 1] of Byte = (am16, am32);
 
   { Tables }
-  tbOneByte = 1; { One Byte OpCodes Table }
-  tbTwoByte = 2; { Two Byte OpCodes Table }
-  tbThreeByte = 3; { Three Byte OpCodes Table }
-  tbFPU = 4; { FPU OpCodes Table }
+  tbOneByte = $01; { One Byte OpCodes Table }
+  tbTwoByte = $02; { Two Byte OpCodes Table }
+  tbThreeByte = $03; { Three Byte OpCodes Table }
+  tbFPU = $04; { FPU OpCodes Table }
 
   { Prefixs }
   Prf_Seg_CS = $01;
@@ -112,62 +112,63 @@ const
   Seg_SS = $06;
 
   { OpSize }
-  ops8bits = 1;
-  ops16bits = 2;
-  ops32bits = 4;
-  ops48bits = 6;
-  ops64bits = 8;
-  ops128bits = 16;
-  ops256bits = 32;
-  ops512bits = 64;
+  ops8bits = $01;
+  ops16bits = $02;
+  ops32bits = $04;
+  ops48bits = $06;
+  ops64bits = $08;
+  ops128bits = $10;
+  ops256bits = $20;
+  ops512bits = $40;
 
   { OpType }
-  otNone = 0;
-  otRET = 1; { RET Instruction }
-  otCALL = 2; { CALL Instruction }
-  otJMP = 4; { JMP Instruction }
-  otJ = 8;
+  otNone = $00;
+  otRET = $01; { RET Instruction }
+  otCALL = $02; { CALL Instruction }
+  otJMP = $04; { JMP Instruction }
+  otJ = $08;
   otJcc = $10; { Conditional JUMP Instruction }
 
   { OpKind }
-  kGrp = 1;
-  // kFPU = 2; Use OpTable !
+  kGrp = $01;
+  // kFPU = $02; Use OpTable !
 
   { Options }
-  DecodeVex = 1;
+  DecodeVex = $01;
 
   { ModRm Flags }
   mfUsed = $80; { ModRm Used }
 
   { Sib Flags }
-  sfUsed = 1; { Sib Used }
+  sfUsed = $01; { Sib Used }
 
   { Displacement Flags }
-  dfUsed = 1; { Disp Used }
-  dfDispOnly = 2; { Displacement Only without registers ! }
-  dfSigned = 4; { Displacement can be signed ! }
-  dfRip = 2; { RIP Disp }
-  dfOffset = 8;
+  dfUsed = $01; { Disp Used }
+  dfRip = $02; { RIP Disp }
+  dfSigned = $04; { Displacement can be signed ! }
+  dfDispOnly = $08; { Displacement Only without registers ! }
+  dfOffset = $10; { Offset coded after the opcode. }
+
   { Immediat Flags }
-  imfUsed = 1; { Imm Used }
+  imfUsed = $01; { Imm Used }
 
   { Branch Flags }
-  bfUsed = 1; { JUMP/CALL Used }
-  bfRel = 2; { Relative Branch }
-  bfAbs = 4; { Absolute Branch }
-  bfIndirect = 8; { Indirect Branch }
+  bfUsed = $01; { JUMP/CALL Used }
+  bfRel = $02; { Relative Branch }
+  bfAbs = $04; { Absolute Branch }
+  bfIndirect = $08; { Indirect Branch }
   bfReg = $10;
   bfFar = bfAbs or $20; { Far Branch }
   bfRip = $40;
 
   { Operand Flags }
-  opdD64 = 1;
-  opdF64 = 2;
-  opdDf64 = 3;
-  opdDv64 = 4;
+  opdD64 = $01;
+  opdF64 = $02;
+  opdDf64 = $03;
+  opdDv64 = $04;
 
   { Options }
-  UseVA = 1;
+  UseVA = $01;
 
   { Error }
   NO_ERROR = $00;
@@ -198,23 +199,20 @@ const
     { INVALID_GROUP_OPCODE }
     'Invalid group opcode');
 
-  _vex3_ = 3;
-  _opcode_ = 1;
-  _modrm_ = 1;
-  _sib_ = 1;
-  _disp32_ = 4;
-  _imm32_ = 4;
-  _imm64_ = 8;
+  _vex3_ = $03;
+  _opcode_ = $01;
+  _modrm_ = $01;
+  _sib_ = $01;
+  _disp32_ = $04;
+  _imm32_ = $04;
+  _imm64_ = $08;
   { Intel define instruction length as a 15 bytes !
     However , it's possible to incode instructions
     that exceed the defined length !
   }
-  MAX_INST_LENGTH_X32 = _vex3_ + _opcode_ + _modrm_ + _sib_ + _disp32_
-    + _imm32_;
-  MAX_INST_LENGTH_X64 = _vex3_ + _opcode_ + _modrm_ + _sib_ + _disp32_
-    + _imm64_;
-  CPUX_TO_INST_LENGTH: array [0 .. 1] of ShortInt = (MAX_INST_LENGTH_X32,
-    MAX_INST_LENGTH_X64);
+  MAX_INST_LENGTH_X32 = _vex3_ + _opcode_ + _modrm_ + _sib_ + _disp32_ + _imm32_;
+  MAX_INST_LENGTH_X64 = _vex3_ + _opcode_ + _modrm_ + _sib_ + _disp32_ + _imm64_;
+  CPUX_TO_INST_LENGTH: array [0 .. 1] of ShortInt = (MAX_INST_LENGTH_X32, MAX_INST_LENGTH_X64);
 {$IFDEF CPUX64}
   MAX_INST_LENGTH_N = MAX_INST_LENGTH_X64;
 {$ELSE !CPUX64}
@@ -677,7 +675,7 @@ end;
 
 function GetModRm_Reg(const Value: Byte): Byte;
 begin
-  Result := (Value and $38) shr 3;
+  Result := (Value and $38) shr $03;
 end;
 
 function GetModRm_Rm(const Value: Byte): Byte;
@@ -692,7 +690,7 @@ end;
 
 function GetSib_Index(const Value: Byte): Byte;
 begin
-  Result := (Value and $38) shr 3;
+  Result := (Value and $38) shr $03;
 end;
 
 function GetSib_Scale(const Value: Byte): Byte;
@@ -744,7 +742,7 @@ var
   Size: Byte;
   DispOnly: Boolean;
 begin
-  Disp := 0;
+  Disp := $00;
   Size := PInst^.Disp.Size;
   PInst^.Disp.Flags := dfUsed;
   DispOnly := (PInst^.ModRm.iMod = $00) and (PInst^.ModRm.Rm = $05);
@@ -780,8 +778,7 @@ var
   SibUsed: Boolean;
 const
   { Get Disp Size from ModRm . }
-  ModRMFlagsToDispSize: array [0 .. 4] of Byte = (0, ops8bits, ops16bits, 0,
-    ops32bits);
+  ModRMFlagsToDispSize: array [0 .. 4] of Byte = (0, ops8bits, ops16bits, 0, ops32bits);
 begin
   PModRM := @PInst^.ModRm;
   PModRM.Value := PInst^.NextInst^;
@@ -818,7 +815,7 @@ var
   Imm: Int64;
   PImm: PImmediat;
 begin
-  Imm := 0;
+  Imm := $00;
   case immSize of
     ops8bits:
       Imm := (PInt8(PInst^.NextInst)^);
@@ -851,7 +848,7 @@ var
   Value: Int64;
   VA: PByte;
 begin
-  Value := 0;
+  Value := $00;
   case Size of
     ops8bits:
       Value := (PInt8(PInst^.NextInst)^);
@@ -1666,7 +1663,7 @@ begin
       SetOpCode(PInst);
       Inc(PInst^.NextInst);
       Decode_J(PInst, PInst^.LID.zOpSize);
-      PInst^.OpType := 0;
+      PInst^.OpType := $00;
       Exit;
     end;
   end;
@@ -1843,8 +1840,7 @@ procedure Decode_NA_I64(PInst: PInstruction);
 begin
   { Instruction is invalid on PM64 }
   { Only valid when mandatory prefix is : $00 }
-  if (PInst^.Archi = CPUX64) or ((PInst^.OpTable <> tbOneByte) and
-    not(PInst^.LID.MndPrf = $00)) then
+  if (PInst^.Archi = CPUX64) or ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf = $00)) then
   begin
     Decode_InvalidOpCode(PInst);
     Exit;
@@ -1867,8 +1863,7 @@ procedure Decode_NA_ModRm_I64(PInst: PInstruction);
 begin
   { Instruction is invalid on PM64 }
   { Only valid when mandatory prefix is : $00 }
-  if (PInst^.Archi = CPUX64) or ((PInst^.OpTable <> tbOneByte) and
-    not(PInst^.LID.MndPrf = $00)) then
+  if (PInst^.Archi = CPUX64) or ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf = $00)) then
   begin
     Decode_InvalidOpCode(PInst);
     Exit;
@@ -1928,8 +1923,7 @@ procedure Decode_NA_Ib_I64(PInst: PInstruction);
 begin
   { Instruction is invalid on PM64 }
   { Only valid when mandatory prefix is : $00 }
-  if (PInst^.Archi = CPUX64) or ((PInst^.OpTable <> tbOneByte) and
-    not(PInst^.LID.MndPrf = $00)) then
+  if (PInst^.Archi = CPUX64) or ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf = $00)) then
   begin
     Decode_InvalidOpCode(PInst);
     Exit;
@@ -2012,8 +2006,7 @@ end;
 procedure Decode_NA_66_ModRm(PInst: PInstruction);
 begin
   { Only valid when mandatory prefix is : $00 or $66 }
-  if ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf in [$00, $66]))
-  then
+  if ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf in [$00, $66])) then
   begin
     Decode_InvalidOpCode(PInst);
     Exit;
@@ -2037,8 +2030,7 @@ end;
 procedure Decode_NA_F3_ModRm(PInst: PInstruction);
 begin
   { Only valid when mandatory prefix is : $00 or $F3 }
-  if ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf in [$00, $F3]))
-  then
+  if ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf in [$00, $F3])) then
   begin
     Decode_InvalidOpCode(PInst);
     Exit;
@@ -2069,8 +2061,7 @@ end;
 procedure Decode_66_F2_ModRm(PInst: PInstruction);
 begin
   { Only valid when mandatory prefix is : $66 or $F2 }
-  if ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf in [$66, $F2]))
-  then
+  if ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf in [$66, $F2])) then
   begin
     Decode_InvalidOpCode(PInst);
     Exit;
@@ -2094,8 +2085,7 @@ end;
 procedure Decode_NA_66_ModRm_Ib(PInst: PInstruction);
 begin
   { Only valid when mandatory prefix is : $00 or $66 }
-  if ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf in [$00, $66]))
-  then
+  if ((PInst^.OpTable <> tbOneByte) and not(PInst^.LID.MndPrf in [$00, $66])) then
   begin
     Decode_InvalidOpCode(PInst);
     Exit;
@@ -2140,8 +2130,7 @@ begin
   end;
 
   { 66 & F2 }
-  Prf66F2 := PInst^.Prefixes and (Prf_OpSize or Prf_Repne)
-    = (Prf_OpSize or Prf_Repne);
+  Prf66F2 := PInst^.Prefixes and (Prf_OpSize or Prf_Repne) = (Prf_OpSize or Prf_Repne);
 
   if Prf66F2 then
   begin
