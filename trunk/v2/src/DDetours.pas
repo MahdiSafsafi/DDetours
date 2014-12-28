@@ -40,7 +40,7 @@ uses
   Windows,
   Classes
 {$IFDEF MustUseGenerics}
-    , Typinfo
+    , Typinfo, Generics.Collections
 {$ENDIF MustUseGenerics}
     ;
 
@@ -78,6 +78,10 @@ function GetNHook(const TargetProc: Pointer): ShortInt;
 function IsHooked(const TargetProc: Pointer): Boolean;
 
 {$IFDEF MustUseGenerics }
+function BeginHooks(): Boolean;
+function EndHooks(): Boolean;
+function BeginUnHooks(): Boolean;
+function EndUnHooks(): Boolean;
 
 type
   DetourException = Exception;
@@ -170,7 +174,7 @@ const
   opNop = $90;
 
   fDscrHasTmp = $01;
-  DscrSigSize = 8;
+  DscrSigSize = $08;
   TrampoSize = 64;
   TmpSize = 32;
 
@@ -221,27 +225,28 @@ type
   PJmpMem = ^TJmpMem;
 
   TDescriptor = packed record
-    Sig: TDscrSig; // Table signature.
-    DscrAddr: PByte; // Pointer that hold jmp address (if Used)!
-    nHook: Byte; // Number of hooks .
-    Flags: Byte; // Reserved for future use!
-    ExMem: PByte; // Reserved for jmp (if used) & for Trampoline !
-    OrgPtr: PByte; // Original Target Proc address.
-    Trampo: PTrampoInfo; // Pointer to TrampoInfo struct.
+    Sig: TDscrSig; { Table signature. }
+    DscrAddr: PByte; { Pointer that hold jmp address (if Used)! }
+    nHook: Byte; { Number of hooks . }
+    Flags: Byte; { Reserved for future use! }
+    ExMem: PByte; { Reserved for jmp (if used) & for Trampoline ! }
+    OrgPtr: PByte; { Original Target Proc address. }
+    Trampo: PTrampoInfo; { Pointer to TrampoInfo struct. }
     { Array that hold jmp destination address. }
     JmpAddrs: array [0 .. MAX_HOOKS] of PByte;
-    { Mark the beginning of descriptor code executing .
-      ==> Must be NOP . }
+    {
+      Mark the beginning of descriptor code executing .
+      ==> Must be NOP .
+    }
     CodeEntry: Byte;
-    { Jmp Instruction for NextHook call
-      and Trampoline call ! }
+    { Jmp Instruction for NextHook call and Trampoline call ! }
     JmpMems: array [0 .. MAX_HOOKS] of TJmpMem;
   end;
 
   PDescriptor = ^TDescriptor;
 
   TNextHook = packed record
-    ID: Byte; // Hook ID .
+    ID: Byte; { Hook ID . }
     PDscr: PDescriptor;
   end;
 
@@ -291,7 +296,7 @@ const
   ErrInterceptProc = 'Invalid InterceptProc Pointer.';
   ErrInvalidDscr = 'Invalid Descriptor.';
   ErrInvalidTrampo = 'Invalid TrampoLine Pointer.';
-
+  ErrBgnUnHooks = 'BeginUnHooks must be called outside BeginHooks/EndHooks.';
   { JMP Type }
   tJmpNone = 0;
   tJmpRel8 = 1;
@@ -1511,11 +1516,22 @@ end;
 
 { TIntercept }
 
+{$IFDEF MustUseGenerics}
+
+var
+  GlobalThreadList: TDictionary<THandle, TThreadsIDList>;
+{$ENDIF MustUseGenerics}
+
 constructor TIntercept.Create(Options: Byte);
 begin
   FOptions := Options;
   FList := nil;
-  if (FOptions and ST = ST) then
+
+  if (FOptions and ST = ST)
+{$IFDEF MustUseGenerics}
+    and (not GlobalThreadList.ContainsKey(GetCurrentThread))
+{$ENDIF MustUseGenerics}
+  then
   begin
     { Suspend All threads ! }
     if OpenThreadExist then
@@ -2130,6 +2146,40 @@ function TDetours<T>.__TToPointer(const x): Pointer;
 begin
   Result := Pointer(x);
 end;
+
+function BeginHooks(): Boolean;
+var
+  List: TThreadsIDList;
+begin
+  List := TThreadsIDList.Create;
+  GlobalThreadList.Add(GetCurrentThread, List);
+  Result := SuspendAllThreads(List);
+end;
+
+function EndHooks(): Boolean;
+var
+  List: TThreadsIDList;
+  currThread: THandle;
+begin
+  currThread := GetCurrentThread;
+  List := GlobalThreadList[currThread];
+  Assert(Assigned(List));
+  Result := ResumeSuspendedThreads(List);
+  GlobalThreadList.Remove(currThread);
+  FreeAndNil(List);
+end;
+
+function BeginUnHooks(): Boolean;
+begin
+  if GlobalThreadList.ContainsKey(GetCurrentThread) then
+    raise InterceptException.Create(ErrBgnUnHooks);
+  Result := BeginHooks;
+end;
+
+function EndUnHooks(): Boolean;
+begin
+  Result := EndHooks;
+end;
 {$ENDIF MustUseGenerics}
 
 var
@@ -2137,6 +2187,9 @@ var
 
 initialization
 
+{$IFDEF MustUseGenerics}
+  GlobalThreadList := TDictionary<THandle, TThreadsIDList>.Create;
+{$ENDIF MustUseGenerics}
 GetSystemInfo(SysInfo);
 SizeOfAlloc := SysInfo.dwPageSize;
 if SizeOfAlloc < (TmpSize + TrampoSize + 64) then
@@ -2171,6 +2224,9 @@ OpenThreadExist := (@OpenThread <> nil);
 
 finalization
 
+{$IFDEF MustUseGenerics}
+  GlobalThreadList.Free;
+{$ENDIF MustUseGenerics}
 if (FreeKernel) and (hKernel > 0) then
   FreeLibrary(hKernel);
 
