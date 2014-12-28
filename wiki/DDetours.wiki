@@ -10,19 +10,19 @@ In order to run your hook correctly,you must follow this rules:
     * Intercept procedure must have the same original procedure signature.That's mean same parameters (types) and same calling convention.
     * When hooking Delphi Object/COM Object .The first parameter of the InterceptProc/Trampoline must be pointer to that object, that's what we call '*Self*'.
     * In multi hooks ,each hook needs it's own NextHook/Trampoline function.
-    * When hooking a lot of functions , make sure that you are hooking inside (*BeginHooks/EndHooks*) *frame* and unhooking inside (*BeginUnHooks/EndUnHooks*)* frame*.
+    * When hooking a lot of functions , make sure that you are hooking inside (*!BeginHooks/!EndHooks*) *frame* and unhooking inside (*!BeginUnHooks/!EndUnHooks*)* frame*.
     * Never try to call the original function directly inside Intercept function .Always use NextHook/Trampoline function.
 
 == DDL functions :==
 This library contains the following functions : 
-    * *InterceptCreate* 
-    * *InterceptRemove*
+    * *!InterceptCreate* 
+    * *!InterceptRemove*
     * *GetNHook*
-    * *IsHooked*
-    * *BeginHooks*
-    * *EndHooks*
-    * *BeginUnHooks*
-    * *EndUnHooks*
+    * *!IsHooked*
+    * *!BeginHooks*
+    * *!EndHooks*
+    * *!BeginUnHooks*
+    * *!EndUnHooks*
 
 == !InterceptCreate ==
 {{{
@@ -81,7 +81,7 @@ function IsHooked(const TargetProc: Pointer): Boolean;
 Check if TargetProc is hooked.
 
 == Speeding up DDL :==
-Sometimes when hooking a lot of functions, DDL can take some time,because it suspend all threads when hooking and unhooking for every Hook/UnHook action.To speed things up a bit ,you could Hook/UnHook inside (*BeginHooks/EndHooks*) and (*BeginUnHooks/EndUnHooks*)*frame*.In that way DDL will suspend/resume threads only once.
+Sometimes when hooking a lot of functions, DDL can take some time,because it suspend all threads when hooking and unhooking for every Hook/UnHook action.To speed things up a bit ,you could Hook/UnHook inside (*!BeginHooks/!EndHooks*) and (*!BeginUnHooks/!EndUnHooks*)*frame*.In that way DDL will suspend/resume threads only once.
 
 ==Example :==
 <u>*Hooking Api function:*</u>
