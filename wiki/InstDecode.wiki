@@ -2,147 +2,204 @@
 
 = Introduction =
 
-*The InstDecode Library* is a library allowing to you to decode intel instruction . It support (x86-x64) architecture .
+The *InstDecode Library* is a library allowing decoding intel instructions . It support both x86-32bit and x86-64bit architectures and provide an easy way to  disassembler opcodes (without displaying opcodes mnemonics).
 
-The library has too function : *!DecodeInstruction* and *!GetMaxInstLen functions *.
+== Features :==
+   * 32bit & 64bit architectures support.
+   * GP,FPU,MMX,SSE,SSE2,SSE3,SSSE3,SSE4.1,SSE4.2,SHA,AES,BMI,BMI2,AVX,FMA, instructions support.
+   * Faster instructions decoding.
+   * Small in size (the size of the compiled "InstDecode.dcu" is about 30 kb) .
+   * One,Two,Three bytes opcodes escape support.
+   * VEX (Two and Three bytes) decoding support.
+   * Calculating Branch destination address.
+   * ...
  
-
-
-== !DecodeInstruction function :==
-
+== !DecodeInst function :==
 {{{
-function DecodeInstruction(const Addr: Pointer; Inst: PInstruction; CPUX: TCPUX): ShortInt;
+function DecodeInst(PInst: PInstruction): ShortInt;
 }}}
-This function is the main function for this library .It can decode instructions , and retrieve information about the instruction that was decoded such as :
-   * Instruction size .
+This is the main function for this library .It can decode instructions , and retrieve useful information about the instruction that was decoded such as :
+   * Instruction length.
    * !OpCode value .
-   * Number of operands.
    * Displacement value .
    * Immediate value .
+   * Branch destination.
+   * Prefixes.
    * ...
 
 ===Params:=== 
-*Addr :* Pointer to the instruction .
+Only one parameter *PInst.*
 
-*Inst :* Pointer to TInstruction structure.It contains the information returned by the *!DecodeInstruction function* .
-
-*CPUX :* Specify the architecture : *CPUX86* for x86 and *CPUX64* for x64 architecture .  
+*PInst :* Pointer to TInstruction structure.It contains the information returned by the *!DecodeInst function* .
 
 ===TInstruction Structure :===
 {{{
-type
-  PPrefixes = ^TPrefixes;
-
-  TPrefixes = packed record
-    Count: Byte; // Numbers of prefixes used by the instruction .
-    case Integer of
-      0: (Pref1, Pref2, Pref3, Pref4: Byte);
-      1: (Prefixes: Array [0 .. 4 - 1] of Byte);
-      2: (Value: DWORD);
+TModRM = record
+    iMod: Byte; { ModRm.Mod Field }
+    Reg: Byte; { ModRm.Reg Field }
+    Rm: Byte; { ModRm.Rm Field }
+    Value: Byte; { ModRm Value }
+    { ModRm.Flags => See ModRmFlagsTable.inc }
+    Flags: Byte;
   end;
 
   PModRM = ^TModRM;
+  LPModRM = PModRM;
 
-  TModRM = record
-    Used: Boolean; { True if instruction use ModRM . }
-    Value: Byte; { Value of ModRM . }
-    rMod: Byte; { Mod field value . }
-    rReg: Byte; { Reg field value . }
-    rRM: Byte; { RM field value . }
-    OpExt: Boolean; { True if  ModRM store OpCode extension . }
+  TSib = record
+    Scale: Byte; { SIB.Scale Field }
+    Index: Byte; { Register Index }
+    Base: Byte; { Register Base }
+    Value: Byte; { SIB Value }
+    Flags: Byte; { SIB Flags }
   end;
 
-  PSIB = ^TSIB;
+  PSib = ^TSib;
+  LPSib = PSib;
 
-  TSIB = packed record
-    Used: Boolean;
-    Scale: Byte;
-    Index: Byte;
-    Base: Byte;
-    Value: Byte;
+  TImmediat = record
+    Size: Byte; { Size of Immediat => opsxxxbits }
+    Value: Int64; { Immediat Value }
+    Flags: Byte; { Sets of imfxxx }
+  end;
+
+  PImmediat = ^TImmediat;
+
+  TDisplacement = record
+    Size: Byte; { Size of Displacement => opsxxxbits }
+    Value: Int64; { Displacement Value }
+    Flags: Byte; { Sets of dfxxx }
   end;
 
   PDisplacement = ^TDisplacement;
 
-  TDisplacement = packed record
-    Used: Boolean; { True if instruction use Displacement . }
-    i32: Boolean; { True if size of Displacement = 32 bit ; otherwise False : size of Displacement = 8 bit }
-    Value: Integer; { Displacement value . }
-    Relative: Boolean; { True if Displacement is Relative => only for x64 bit . }
+  TBranch = record
+    Size: Byte; { Branch size/length. }
+    Value: Int64;
+    Target: PByte; { Destination address }
+    Falgs: Byte; { Sets of bfxxx }
   end;
 
-  PImmediate = ^TImmediate;
+  PBranch = ^TBranch;
 
-  TImmediate = packed record
-    Used: Boolean; { True if instruction use Immediate . }
-    SizeOfImmediate: Byte; { Size Of Immediate Value [1,2,4,8] bytes . }
-    Value: Int64; { Value of Immediate . }
+  TRex = record
+    R: Boolean; { REX.R Field }
+    X: Boolean; { REX.X Field }
+    B: Boolean; { REX.B Field }
+    W: Boolean; { REX.W Field }
+    Value: Byte; { REX value = [$40..$4F] }
   end;
 
-  PJumpCall = ^TJumpCall;
+  PRex = ^TRex;
 
-  TJumpCall = packed record
-    Used: Boolean; { True if instruction is JUMP or CALL . }
-    JumpUsed: Boolean; { True if instruction is JUMP . }
-    CallUsed: Boolean; { True if instruction is CALL . }
-    Relative: Boolean; { True if instruction use Relative offset . }
-    IndirectDispOnly: Boolean; { True if JUMP/CALL Indirect Disp only => JMP [123456] }
-    IndirectReg: Boolean; { True if JUMP/CALL Indirect  => JMP [EAX]; JMP [EAX + 123456] }
-    OffsetSize: Byte; { Size of Offset . }
-    Offset: Integer; { Offset value . }
-    Address: UInt64; { Destination address . }
+  TVex = record
+    {
+      ==================> N.B <==================
+      1 => ALL FIELD ARE IN NO INVERTED FORM !
+      2 => VEX.[R,X,B & W] ARE ACCESSIBLE THROUGH REX FIELD !
+
+    }
+    vvvv: Byte; { VEX.vvvv ==> Vector Register }
+    L: Boolean; { VEX.L ==> You should use VL instead ! }
+    PP: Byte; { VEX.PP ==> Implied Mandatory Prefixes }
+    mmmmm: Byte; { VEX.mmmmm ==> Implied Escape }
+    VL: Byte; { Vector Length }
   end;
 
-  TOpCodeParams = packed record
-    nOp: Byte; // Numbers of operands .
-    Op1: DWORD; // Operand 1 flags .
-    Op2: DWORD; // Operand 2 flags .
-    Op3: DWORD; // Operand 3 flags .
-    Op4: DWORD; // Operand 4 flags .
+  PVex = ^TVex;
+
+  TInternalData = record
+    MndPrf: Byte; { Mandatory Prefix }
+    zOpSize: Byte; { word or dword depending on opsize prefix ! }
+    vOpSize: Byte; { word or dword or qword depending on opsize & REX prefix ! }
+  end;
+
+  PInternalData = ^TInternalData;
+
+  TInstruction = record
+    Archi: Byte; { CPUX32 or CPUX64 ! }
+    AddrMode: Byte; { Address Mode }
+    Addr: PByte; { The address where the library will start the decoding. }
+    VirtualAddr: PByte; { VA to calculate branch destination. }
+    NextInst: PByte; { Pointer to the Next Instruction }
+    OpCode: Byte; { OpCode Value }
+    OpType: Byte; { otCALL,otRET,otJMP,... }
+    OpKind: Byte; { kGrp if inst escaped from group. }
+    OpTable: Byte; { tbOneByte,tbTwoByte,... }
+    OperandFlags: Byte; { one of this : opdxxx }
+    Prefixes: Word; { Sets of Prf_xxx }
+    ModRm: TModRM;
+    Sib: TSib;
+    Disp: TDisplacement;
+    Imm: TImmediat; { Primary Immediat }
+    ImmEx: TImmediat; { Secondary Immediat if used ! }
+    Branch: TBranch; { JMP & CALL }
+    SegReg: Byte; { Segment Register }
+    Rex: TRex; { Rex Structure }
+    Vex: TVex; { Vex Structure }
+    LID: TInternalData; { Internal Data }
+    Errors: Byte; { Decoding Errors }
+    InstSize: Byte; { Instruction Length }
+    Options: Byte;
+    UserTag: UInt64; { User Data }
   end;
 
   PInstruction = ^TInstruction;
 
-  TInstruction = packed record
-    Address: Pointer; { Current Address }
-    Mod16: Boolean; { True if size of operand =  16 bit }
-    Mod64: Boolean; { True if size of operand =  64 bit }
-    Prefixes: TPrefixes; { Prefixes }
-    OpCode: Word; { OpCode }
-    nOpCode: Byte; { Numbers of OpCode ==> Max = 3 }
-    SOpCode: Byte; { Secondary OpCode Value }
-    SOpUsed: Boolean; { True if Secondary OpCode Used . }
-    Params: TOpCodeParams; { Operand Params }
-    ModRM: TModRM; { ModRM }
-    SIB: TSIB; { SIB }
-    Displacement: TDisplacement; { Displacement }
-    Immediate: TImmediate; { Immediate }
-    JumpCall: TJumpCall; { JumpCall }
-    InstSize: ShortInt; { Instruction Size }
-    NextInst: Pointer; { Pointer to the next instruction . }
-  end;
 }}}
- 
 === Example :===
+Here is a sample example showing how to use this library to decode instructions.
+This example will illustrates all instructions used in the "Foo function".
 {{{
-function Foo: Integer;
+uses
+  System.SysUtils,
+  InstDecode;
+
+procedure Foo;
 asm
-  MOV EAX,8
-  ADD EAX,2
+  {$IFDEF CPUX64}
+  PUSH RAX
+  XOR EAX,EAX
+  MOV EAX,5
+  ADD EAX,EDX
+  POP RAX
+  NOP
+  NOP
+  NOP
+  MOV RAX,1
+  {$ELSE !CPUX64}
+  PUSH EAX
+  XOR EAX,EAX
+  MOV EAX,5
+  ADD EAX,EDX
+  POP EAX
+  NOP
+  NOP
+  NOP
+  MOV EAX,1
+  {$ENDIF CPUX64}
 end;
 
 var
   Inst: TInstruction;
-begin
-  Foo;
-  FillChar(Inst, SizeOf(TInstruction), #0);
-  DecodeInstruction(@Foo, @Inst, CPUX32); // Instruction = MOV EAX,8 .
-  ShowMessage(IntToStr(Inst.InstSize)); // InstSize = 5 .
-end;
-}}}
+  nInst: Integer;
 
-== !GetMaxInstLen function :==
-{{{
-function GetMaxInstLen(CPUX: TCPUX): ShortInt;
+begin
+  //Foo;
+  Inst := Default (TInstruction);
+  Inst.Archi := CPUX;
+  Inst.NextInst := @Foo;
+  nInst := 0;
+  while (Inst.OpType <> otRET) do
+  begin
+    inc(nInst);
+    Inst.Addr := Inst.NextInst;
+    DecodeInst(@Inst);
+    Writeln(Format('OpCode : 0x%.2x | Length : %d', [Inst.OpCode, Inst.InstSize]));
+  end;
+  Writeln('-------------------------------');
+  Writeln(Format('Total instructions : %d', [nInst]));
+  ReadLn;
+
+end.
 }}}
-This function return the maximum instruction length depending on the architecture specified by the CPUX parameter .
