@@ -97,47 +97,33 @@ end;
 {{{
 {Simple example showing how to hook COM object }
 var
-  DesktopShellFolder: IShellFolder;
-  TrampoParseDisplayName: function(const Self; hwndOwner: HWND; pbcReserved: Pointer; lpszDisplayName: POLESTR; out pchEaten: ULONG; out ppidl: PItemIDList;
-    var dwAttributes: ULONG): HResult; stdcall;
+  { First parameter must be Self! }
+  Trampoline_FileOpenDialog_SetTitle: function(const Self; pszTitle: LPCWSTR): HRESULT; stdcall;
 
-function GetDesktopShellFolder: IShellFolder;
+function Intercept_FileOpenDialog_SetTitle(const Self; pszTitle: LPCWSTR): HRESULT; stdcall;
 begin
-  OleCheck(SHGetDesktopFolder(Result));
+  Writeln('Original Title = ' + pszTitle);
+  Result := Trampoline_FileOpenDialog_SetTitle(Self, 'Hooked');
 end;
 
-procedure TMain.Button1Click(Sender: TObject);
 var
-  ItemIdList: PItemIDList;
-  Folder: IShellFolder;
-  FileName: string;
-  pchEaten: ULONG;
-  Attr: Cardinal;
+  FileOpenDialog: IFileOpenDialog;
+
 begin
-  Attr := 0;
-  pchEaten := 0;
-  FileName := 'C:\';
-  DesktopShellFolder.ParseDisplayName(0, nil, PChar(FileName), pchEaten, ItemIdList, Attr);
-end;
+  { initialization }
+  CoInitialize(0);
+  FileOpenDialog := CreateComObject(CLSID_FileOpenDialog) as IFileOpenDialog;
 
-function ParseDisplayName_Hook(const Self; hwndOwner: HWND; pbcReserved: Pointer; lpszDisplayName: POLESTR; out pchEaten: ULONG; out ppidl: PItemIDList;
-  var dwAttributes: ULONG): HResult; stdcall;
-begin
-  {
-   Using DDL can help you understand how functions work !
-  eg:
-  ParseDisplayName is a callback function , and it get called 3 time !
-  }
-  Main.LogMem.Lines.Add('----------------------------------');
-  Main.LogMem.Lines.Add(Format('lpszDisplayName = %s', [lpszDisplayName]));
-  Main.LogMem.Lines.Add(Format('ppidl = %p', [ppidl]));
-  Result := TrampoParseDisplayName(Self, hwndOwner, pbcReserved, lpszDisplayName, pchEaten, ppidl, dwAttributes);
-end;
+  { Installing Hook }
+  Trampoline_FileOpenDialog_SetTitle := InterceptCreate(FileOpenDialog, 17, @Intercept_FileOpenDialog_SetTitle);
+ 
+  { Show OpenDialog }
+  FileOpenDialog.SetTitle('Open..');
+  FileOpenDialog.Show(0);
 
-initialization
-
-DesktopShellFolder := GetDesktopShellFolder;
-@TrampoParseDisplayName := InterceptCreate(DesktopShellFolder, 3, @ParseDisplayName_Hook);
+  { Removing Hook }
+  InterceptRemove(@Trampoline_FileOpenDialog_SetTitle); 
+end.
 }}}
 
 ==Generate better opcodes==
