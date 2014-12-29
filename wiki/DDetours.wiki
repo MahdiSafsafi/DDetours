@@ -8,10 +8,10 @@ The basic idea of this library is to replaces the prologue of the target functio
 == Hooking Rules :==
 In order to run your hook correctly,you must follow this rules:
     * Intercept procedure must have the same original procedure signature.That's mean same parameters (types) and same calling convention.
-    * When hooking Delphi Object/COM Object .The first parameter of the InterceptProc/Trampoline must be pointer to that object, that's what we call '*Self*'.
-    * In multi hooks ,each hook needs it's own NextHook/Trampoline function.
+    * When hooking Delphi Object/COM Object .The first parameter of the !InterceptProc/Trampoline must be pointer to that object, that's what we call '*Self*'.
+    * In multi hooks ,each hook needs it's own !NextHook/Trampoline function.
     * When hooking a lot of functions , make sure that you are hooking inside (*!BeginHooks/!EndHooks*) *frame* and unhooking inside (*!BeginUnHooks/!EndUnHooks*)* frame*.
-    * Never try to call the original function directly inside Intercept function .Always use NextHook/Trampoline function.
+    * Never try to call the original function directly inside Intercept function .Always use !NextHook/Trampoline function.
 
 == DDL functions :==
 This library contains the following functions : 
@@ -44,9 +44,9 @@ This function can hook (redirect) the !TargetProc to the !InterceptProc .
 
 *Method :* Function name that you will hook.
 
-*ForceLoadModule :* if True the DDL will try to load the module/library if it's not loaded.
+*!ForceLoadModule :* if True the DDL will try to load the module/library if it's not loaded.
 
-*TargetInterface:* The interface that containts the method that you are going to hook.
+*!TargetInterface:* The interface that containts the method that you are going to hook.
 
 * !MethodIndex:* Method Index inside the interface .
     * You must count all methods declared in parents interface.
@@ -74,14 +74,14 @@ function GetNHook(const TargetProc: Pointer): ShortInt;
 }}}
 Return the number of hook which are in current use.
 
-== IsHooked ==
+== !IsHooked ==
 {{{
 function IsHooked(const TargetProc: Pointer): Boolean;
 }}}
-Check if TargetProc is hooked.
+Check if !TargetProc is hooked.
 
 == Speeding up DDL :==
-Sometimes when hooking a lot of functions, DDL can take some time,because it suspend all threads when hooking and unhooking for every Hook/UnHook action.To speed things up a bit ,you could Hook/UnHook inside (*!BeginHooks/!EndHooks*) and (*!BeginUnHooks/!EndUnHooks*)*frame*.In that way DDL will suspend/resume threads only once.
+Sometimes when hooking a lot of functions, DDL can take some time,because it suspend all threads when hooking and unhooking for every Hook/!UnHook action.To speed things up a bit ,you could Hook/!UnHook inside (*!BeginHooks/!EndHooks*) and (*!BeginUnHooks/!EndUnHooks*)*frame*.In that way DDL will suspend/resume threads only once.
 
 ==Example :==
 <u>*Hooking Api function:*</u>
