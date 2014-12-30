@@ -448,7 +448,7 @@ begin
   while P < Q do
   begin
     PP := Pointer(P);
-    if VirtualQuery(PP, mbi, Size) = 0 then
+    if VirtualQuery(PP, mbi, SizeOf(mbi)) = 0 then
       Break;
     if (mbi.State and MEM_FREE = MEM_FREE) and (mbi.RegionSize > Size) then
       { Yes there is a memory that we can use ! }
