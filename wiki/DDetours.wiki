@@ -49,8 +49,9 @@ This function can hook (redirect) the !TargetProc to the !InterceptProc .
 *!TargetInterface:* The interface that containts the method that you are going to hook.
 
 * !MethodIndex:* Method Index inside the interface .
-    * You must count all methods declared in parents interface.
+    * Zero based counting : you must start counting from *zero*.
     * Counting must be from the top to the bottom.
+    * You must count all methods declared in parents interface.
 
 * Return :* The return value is a pointer to the *!TrampoLine function *.
 The *!TrampoLine function * can execute the original function (!TargetProc).
