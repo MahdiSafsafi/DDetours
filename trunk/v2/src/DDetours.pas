@@ -1643,6 +1643,15 @@ begin
 end;
 
 procedure TIntercept.InsertDescriptor(PAt: PByte; PDscr: PDescriptor);
+const
+  { JMP from Target to Code Entry }
+  kJmpCE = 1;
+  { JMP from Target to Temporal address than JMP to Code Entry }
+  kJmpTmpJmpCE = 2;
+  { JMP from Target to Temporal address than JMP (Rip Zero) to Code Entry }
+  kJmpTmpJmpRipZCE = 3;
+  { JMP (Rip Zero) from Target to Code Entry }
+  kJmpRipZCE = 4;
 var
   fJmpType: Byte; { First JMP }
 {$IFDEF CPUX64}
@@ -1659,7 +1668,7 @@ var
   PExMem: PByte;
   LPExMem: PByte;
 begin
-  JmpKind := 1;
+  JmpKind := kJmpCE;
   Sb := 0;
   P := PAt;
   PDscr^.OrgPtr := P;
@@ -1673,7 +1682,7 @@ begin
   LPExMem := PExMem;
 {$IFDEF CPUX64}
   sJmpType := tJmpNone;
-  JmpKind := 4;
+  JmpKind := kJmpRipZCE;
   { Try to find the perfect jump instruction ! }
   {
     That's mean that we try to avoid using tJmpRelN on TargetProc .
@@ -1685,20 +1694,20 @@ begin
     Inc(PExMem, TmpSize);
     if Assigned(Tmp) then
     begin
-      JmpKind := 4;
+      JmpKind := kJmpRipZCE;
       fJmpType := GetJmpType(P, Tmp, Tmp + 6);
       if JmpTypeToSize[fJmpType] < 7 then
       begin
-        JmpKind := 3;
+        JmpKind := kJmpTmpJmpRipZCE;
         sJmpType := GetJmpType(Tmp, @PDscr^.CodeEntry, Tmp + 6 + 8);
         if JmpTypeToSize[sJmpType] < 7 then
-          JmpKind := 2;
+          JmpKind := kJmpTmpJmpCE;
       end;
     end;
   end
   else
   begin
-    JmpKind := 1;
+    JmpKind := kJmpCE;
   end;
 {$ENDIF CPUX64}
   Inst := default (TInstruction);
@@ -1736,7 +1745,7 @@ begin
   try
     FillNop(P^, Sb);
     case JmpKind of
-      1:
+      kJmpCE:
         begin
           { A very good jump ! }
           {
@@ -1746,7 +1755,7 @@ begin
           InsertJmp(P, @PDscr^.CodeEntry, fJmpType, @PDscr^.DscrAddr);
         end;
 {$IFDEF CPUX64}
-      2:
+      kJmpTmpJmpCE:
         begin
           {
             TargetProc :
@@ -1758,7 +1767,7 @@ begin
           InsertJmp(P, Tmp, fJmpType, Tmp + 6);
           InsertJmp(Tmp, @PDscr^.CodeEntry, sJmpType, Tmp + 6 + 8);
         end;
-      3:
+      kJmpTmpJmpRipZCE:
         begin
           {
             TargetProc :
@@ -1770,7 +1779,7 @@ begin
           InsertJmp(P, Tmp, fJmpType, Tmp + 6);
           InsertJmp(Tmp, @PDscr^.CodeEntry, tJmpRipZ, nil);
         end;
-      4:
+      kJmpRipZCE:
         begin
           {
             Not a good jump !
