@@ -40,7 +40,8 @@ uses
   Windows,
   Classes
 {$IFDEF MustUseGenerics}
-    , Typinfo, Generics.Collections
+    , Generics.Collections //
+    , Typinfo
 {$ENDIF MustUseGenerics}
     ;
 
@@ -85,29 +86,47 @@ function EndUnHooks(): Boolean;
 
 type
   DetourException = Exception;
-TDetours < T >= class(TObject) //
-  private FTargetProc: PByte;
-FInterceptProc:
-PByte;
-FNextHook:
-T;
-function CheckTType: Boolean;
-function TToPointer(const x: T): Pointer;
-function PointerToT(const P: Pointer): T;
-function __TToPointer(const x): Pointer;
-function __PointerToT(const P): T;
-function GetNextHook: T;
-function GetInstalled: Boolean;
-function GetHookCount: ShortInt;
-public
-  constructor Create(const TargetProc, InterceptProc: T);
-  destructor Destroy;
-  override;
-  procedure Enable;
-  procedure Disable;
-  property Trampoline: T read GetNextHook; // Call the original
-  property Installed: Boolean read GetInstalled;
-  property nHook: ShortInt read GetHookCount;
+
+  IGenericCast<T> = interface(IInterface)
+    ['{B19D793C-3225-439C-A2F3-04A72D41879E}']
+    function TToPointer(const _T: T): Pointer;
+    function PointerToT(const _P: Pointer): T;
+  end;
+
+  IDetours<T> = interface(IInterface)
+    ['{04552E96-C716-4378-BE9A-CD383D20AB91}']
+    function NextHook: T;
+    function GetInstalled: Boolean;
+    function GetHookCount: ShortInt;
+    procedure SetHook(const TargetProc, InterceptProc: T);
+    procedure Enable;
+    procedure Disable;
+    property Trampoline: T read NextHook; // Call the original
+  end;
+
+  TDetours<T> = class(TInterfacedObject, IGenericCast<T>, IDetours<T>)
+  private
+    FTargetProc: PByte;
+    FInterceptProc: PByte;
+    FNextHook: T;
+    function __TToPointer(const _T): Pointer;
+    function __PointerToT(const _P): T;
+    function TToPointer(const _T: T): Pointer;
+    function PointerToT(const _P: Pointer): T;
+    function NextHook: T;
+    function GetInstalled: Boolean;
+    function GetHookCount: ShortInt;
+  protected
+    function CheckTType: Boolean;
+    procedure SetHook(const TargetProc, InterceptProc: T);
+  public
+    constructor Create(const TargetProc, InterceptProc: T);
+    destructor Destroy; override;
+    procedure Enable;
+    procedure Disable;
+    property Trampoline: T read NextHook; // Call the original
+    property Installed: Boolean read GetInstalled;
+    property nHook: ShortInt read GetHookCount;
   end;
 
 const
@@ -297,6 +316,7 @@ const
   ErrInvalidDscr = 'Invalid Descriptor.';
   ErrInvalidTrampo = 'Invalid TrampoLine Pointer.';
   ErrBgnUnHooks = 'BeginUnHooks must be called outside BeginHooks/EndHooks.';
+
   { JMP Type }
   tJmpNone = 0;
   tJmpRel8 = 1;
@@ -2090,16 +2110,21 @@ constructor TDetours<T>.Create(const TargetProc, InterceptProc: T);
 begin
   inherited Create();
   CheckTType;
-  FTargetProc := TToPointer(TargetProc);
-  FInterceptProc := TToPointer(InterceptProc);
-  FNextHook := T(nil);
-  Assert(Assigned(FTargetProc) and Assigned(FInterceptProc), 'Target or replacement methods are not assigned');
+  SetHook(TargetProc, InterceptProc);
 end;
 
 destructor TDetours<T>.Destroy;
 begin
   Disable;
   inherited;
+end;
+
+procedure TDetours<T>.SetHook(const TargetProc, InterceptProc: T);
+begin
+  FTargetProc := TToPointer(TargetProc);
+  FInterceptProc := TToPointer(InterceptProc);
+  FNextHook := T(nil);
+  Assert(Assigned(FTargetProc) and Assigned(FInterceptProc), 'Target or replacement methods are not assigned');
 end;
 
 procedure TDetours<T>.Disable;
@@ -2130,32 +2155,33 @@ begin
   Result := Assigned(TToPointer(FNextHook));
 end;
 
-function TDetours<T>.GetNextHook: T;
+function TDetours<T>.NextHook: T;
 begin
   Assert(Installed, SDetoursNotInstalled);
   Result := FNextHook;
 end;
 
-function TDetours<T>.PointerToT(const P: Pointer): T;
+function TDetours<T>.PointerToT(const _P: Pointer): T;
 begin
-  Result := __PointerToT(P);
+  Result := __PointerToT(_P);
 end;
 
-function TDetours<T>.TToPointer(const x: T): Pointer;
+function TDetours<T>.TToPointer(const _T: T): Pointer;
 begin
-  Result := __TToPointer(x);
+  Result := __TToPointer(_T);
 end;
 
-function TDetours<T>.__PointerToT(const P): T;
+function TDetours<T>.__PointerToT(const _P): T;
 begin
-  Result := T(P);
+  Result := T(_P);
 end;
 
-function TDetours<T>.__TToPointer(const x): Pointer;
+function TDetours<T>.__TToPointer(const _T): Pointer;
 begin
-  Result := Pointer(x);
+  Result := Pointer(_T);
 end;
 
+{ --------------------------------------------------------------------------- }
 function BeginHooks(): Boolean;
 var
   List: TThreadsIDList;
