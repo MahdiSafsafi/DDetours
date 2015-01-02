@@ -19,16 +19,17 @@ Del "*.drc" /s/q
 Del "*.map" /s/q
 
 set mustdel=false
-For /f %%f in ('dir /s/b/l/a:d') do (
+For /r %%f in (.) do (
     set "mustdel=false"
 	if %%~nf==Win32 (
-		if exist "%%f\Debug\" set "mustdel=true"
-		if exist "%%f\Release\" set "mustdel=true"
+		if exist "%%~ff\Debug\" set "mustdel=true"
+		if exist "%%~ff\Release\" set "mustdel=true"
 ) else if %%~nf==Win64 (
-		if exist "%%f\Debug\" set "mustdel=true"
-		if exist "%%f\Release\" set "mustdel=true" 
+		if exist "%%~ff\Debug\" set "mustdel=true"
+		if exist "%%~ff\Release\" set "mustdel=true" 
 		)
 if %%~nf==__history set "mustdel=true"
-if !mustdel!==true rd /s/q %%f
+if !mustdel!==true (
+	if exist "%%~ff" rd /s/q "%%~ff"
+        )
 )
-pause
