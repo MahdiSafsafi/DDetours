@@ -170,6 +170,16 @@ const
   { Options }
   UseVA = $01;
 
+  { General Purpose Registers }
+  rEAX = $00;
+  rECX = $01;
+  rEDX = $02;
+  rEBX = $03;
+  rESP = $04;
+  rEBP = $05;
+  rESI = $06;
+  rEDI = $07;
+
   { Error }
   NO_ERROR = $00;
   INVALID_CPUX = $01;

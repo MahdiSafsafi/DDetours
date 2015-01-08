@@ -26,6 +26,7 @@
     {$DEFINE CanInline}
   {$IFEND}
   {$IF CompilerVersion >=20}
+    {$DEFINE D2009UP }  
     {$DEFINE GenericsExist }
   {$IFEND}
 {$ENDIF !FPC}
