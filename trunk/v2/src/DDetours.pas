@@ -37,7 +37,7 @@ uses
   InstDecode,
   CPUID,
   SysUtils,
-  Windows,
+  WinApi.Windows,
   Classes
 {$IFDEF MustUseGenerics}
     , Generics.Collections //
@@ -140,7 +140,11 @@ implementation
 
 { Delphi }
 uses
+{$IFDEF D2009UP}
+  WinApi.TLHelp32;
+{$ELSE !D2009UP}
   TLHelp32;
+{$ENDIF D2009UP}
 {$ELSE FPC}
 
 type
@@ -956,11 +960,14 @@ begin
   end;
 end;
 
-function GetInstOpCodes(PInst: PInstruction; P: PByte): Integer;
+function GetInstOpCodes(PInst: PInstruction; P: PByte): ShortInt;
 var
   nPrfs: Byte;
 begin
-  { Return opcodes bytes that represent the instruction . }
+  {
+    Return opcodes length
+    Instruction OpCodes in arg P  .
+  }
   Result := 0;
   FillChar(P^, MAX_INST_LENGTH_N, $90);
   nPrfs := GetPrefixesCount(PInst^.Prefixes);
@@ -1336,11 +1343,22 @@ begin
   end;
 end;
 
+function MakeModRm(iMod, Reg, Rm: Byte): Byte; {$IFDEF MustInline}inline; {$ENDIF}
+begin
+  Result := (iMod shl 6) or (Reg shl 3) or (Rm);
+end;
+
 function CorrectRipDisp(PInst: PInstruction; NewAddr: PByte): Integer;
 var
   Offset: Int64;
   P: PByte;
+  rReg: Byte;
+  POpc: PByte;
+  pMR: PByte;
+  pFrst: PByte;
+  L: ShortInt;
 begin
+  pFrst := NewAddr;
   P := PInst^.NextInst;
   {
     If AddressMode is 32-bits :
@@ -1356,8 +1374,52 @@ begin
 
   Offset := Int64(UInt64(P) - UInt64(NewAddr) - PInst^.InstSize);
   if Int32(Offset) <> Offset then
-    raise InterceptException.Create(ErrRipDisp);
+  begin
+    rReg := rEAX;
+    if PInst^.ModRm.Flags and mfUsed <> 0 then
+    begin
+      Assert(PInst^.Disp.Flags and dfRip <> 0);
+      if PInst^.ModRm.Reg = rReg then
+        rReg := rECX;
 
+      { PUSH UsedReg }
+      PByte(NewAddr)^ := $50 + (rReg and $7);
+      Inc(NewAddr);
+
+{$IFDEF CPUX64}
+      PByte(NewAddr)^ := $48; // REX.W!
+      Inc(NewAddr);
+{$ENDIF CPUX64}
+      { MOV REG,Imm(NativeUInt) }
+      PByte(NewAddr)^ := $B8 + (rReg and $7);
+      Inc(NewAddr);
+      PNativeUInt(NewAddr)^ := NativeUInt(P);
+      Inc(NewAddr, SizeOf(NativeUInt));
+
+      { Set the original instruction opcodes }
+      POpc := GetMemory(MAX_INST_LENGTH_N);
+      L := GetInstOpCodes(PInst, POpc);
+
+      Move(PByte(@POpc[0])^, NewAddr^, L);
+      Inc(NewAddr, L);
+      pMR := NewAddr;
+      if (PInst^.OpKind and kGrp <> 0) or (PInst^.OpTable = tbFPU) then
+        Dec(pMR);
+
+      PByte(pMR)^ := MakeModRm($00, PInst^.ModRm.Reg, rReg);
+      Inc(pMR);
+      NewAddr := pMR;
+
+      { POP UsedReg }
+      PByte(NewAddr)^ := $58 + (rReg and $7);
+      Inc(NewAddr);
+
+      FreeMemory(POpc);
+      Exit(NewAddr - pFrst);
+    end
+    else
+      raise InterceptException.Create(ErrRipDisp);
+  end;
   Move(PInst^.Addr^, NewAddr^, PInst^.InstSize);
   Inc(NewAddr, PInst^.InstSize);
   PInt32(NewAddr - 4)^ := Int32(Offset);
