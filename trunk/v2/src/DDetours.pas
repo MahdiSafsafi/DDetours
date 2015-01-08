@@ -1422,7 +1422,7 @@ begin
   end;
   Move(PInst^.Addr^, NewAddr^, PInst^.InstSize);
   Inc(NewAddr, PInst^.InstSize);
-  PInt32(NewAddr - 4)^ := Int32(Offset);
+  PInt32(NewAddr - SizeOf(Int32))^ := Int32(Offset);
 
   Result := PInst^.InstSize;
 end;
@@ -1494,7 +1494,7 @@ begin
           ModRm.Rm = 05
           ==> ModRm = $15 !
         }
-        P^ := ($00 or $10 or $05);
+        P^ := MakeModRm($00, $02, $05);
         Inc(P);
         P^ := 2;
         Inc(P, 4);
@@ -1505,7 +1505,7 @@ begin
         P^ := $08;
         Inc(P);
         PUInt64(P)^ := UInt64(PInst^.Branch.Target);
-        Inc(P, 8);
+        Inc(P, SizeOf(UInt64));
       end;
   end;
   Result := P - NewAddr;
@@ -1668,7 +1668,7 @@ begin
   fDecodeInst(@Inst);
 
   { The first instruction must be NOP ! }
-  if Inst.OpCode = $90 then
+  if Inst.OpCode = opNop then
   begin
     Inst.Addr := Inst.NextInst;
     fDecodeInst(@Inst);
@@ -1932,7 +1932,7 @@ begin
   InsertJmp(Result, @PDscr^.JmpMems[n + 1], tJmpMemN, Result + 6);
   Inc(PDscr^.nHook);
 
-  SetMemPermission(Result, 14, PAGE_EXECUTE_READWRITE);
+  SetMemPermission(Result, JmpTypeToSize[tJmpRipZ], PAGE_EXECUTE_READWRITE);
 end;
 
 function TIntercept.InstallHook(TargetProc, InterceptProc: PByte; const Options: Byte = $00): PByte;
