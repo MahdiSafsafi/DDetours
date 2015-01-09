@@ -1823,7 +1823,7 @@ begin
   PDscr^.Trampo^.Size := Sb; // Size of stolen instructions .
 
   Tsz := MapInsts(P, T, Sb);
-  OrgAccess := SetMemPermission(P, Sb, PAGE_READWRITE);
+  OrgAccess := SetMemPermission(P, Sb, PAGE_EXECUTE_READWRITE);
   try
     FillNop(P^, Sb);
     case JmpKind of
