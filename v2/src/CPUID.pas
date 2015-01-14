@@ -23,6 +23,8 @@ unit CPUID;
 
 interface
 
+{$I Defs.inc}
+
 uses SysUtils;
 
 type
