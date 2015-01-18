@@ -3,12 +3,12 @@
 
 = Major changes=
 
-  # Introducing new hooking model architecture.
+  # Introduced new hooking model architecture.
   # Many !BugFix
-  # Adding multi hook support.
-  # Detecting Hook.
-  # Introducing instructions maping feature.
-  # Adding COM object hooking support.
+  # Added multi hook support.
+  # Added hook detecting feature.
+  # Introduced instructions maping feature.
+  # Added COM object hooking support.
   # Generate better opcodes.
   # New !InstDecode Library
 
@@ -152,17 +152,17 @@ it use traditional Nop instructions.
 
 ==!InstDecode Library==
 The new !InstDecode Library includes the following updates :
-  * Updating opcodes map .
-  * Improve Decoding Process .=> Very faster than the old one !
-  * Adding support to three byte opcodes escape Table.
-  * Adding support to vex decoding (vex three & two byte).
-  * Adding support to groups opcodes instructions.
-  * Adding support to decode invalid opcode .
-  * Adding support to 16-bits !ModRm .
-  * Adding support to handling errors.
-  * Adding support for mandatory prefixes.
+  * Updated opcodes map .
+  * Improved Decoding Process .=> Very faster than the old one !
+  * Added support to three byte opcodes escape Table.
+  * Added support to vex decoding (two & three bytes).
+  * Added support to groups opcodes instructions.
+  * Added support to decode invalid opcodes .
+  * Added support to 16-bits !ModRm .
+  * Added support to handling errors.
+  * Added support for mandatory prefixes.
   * Reduce memory usage .
-  * Removing inused fields.
+  * Removed inused fields.
   * Better support for REX prefix.
   * Reduce !OpCodesTable data size (the old : 8670 bytes => the new one : 1020 bytes !)
   * !BugFix : FPU instructions length.
