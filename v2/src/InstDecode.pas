@@ -14,7 +14,7 @@
 // The Original Code is InstDecode.pas.
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2014 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2015 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************
@@ -26,13 +26,13 @@
 
   ==> Version 2:
   +Updated opcodes map .
-  +Adding support to three byte escape Table
-  +Adding support to vex decoding (vex three & two byte).
-  +Adding support to groups opcodes instructions.
-  +Adding support to decode invalid opcode .
-  +Adding support to 16-bits ModRm .
-  +Adding support to handling errors.
-  +Adding support for mandatory prefixes.
+  +Added support to three byte escape Table
+  +Added support to vex decoding (vex three & two byte).
+  +Added support to groups opcodes instructions.
+  +Added support to decode invalid opcode .
+  +Added support to 16-bits ModRm .
+  +Added support to handling errors.
+  +Added support for mandatory prefixes.
   +Improve Decoding Process .=> Very faster than the old one !
   +Reduce memory usage .
   +Removing inused fields.

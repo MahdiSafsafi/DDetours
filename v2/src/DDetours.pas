@@ -18,13 +18,26 @@
 // RRUZ
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2014 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2015 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************
 
 { ===============================> CHANGE LOG <======================================================
-  Not Yet!
+  Version2:
+  +Many bug fix.
+  +Added new hooking model architecture.
+  +Added multi hook support.
+  +Added COM hook support.
+  +Added instruction maping feature.
+  +Added hook detecting feature.
+  +Added BeginHooks/EndHooks.
+  +Added BeginUnHooks/EndUnHooks.
+  +Added IDetours interface.
+  +Added MultiNop instructions support.
+  +Generate better opcodes.
+  +Improved support for x64.
+  +Improved AllocMemAt function.
   ====================================================================================================== }
 
 unit DDetours;
