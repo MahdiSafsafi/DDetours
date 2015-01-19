@@ -85,7 +85,7 @@ const
   { ======================================================================================================================================================= }
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
-function InterceptCreate(const Module, Method: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = False; Options: Byte = v1compatibility)
+function InterceptCreate(const Module, Method: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
   : Pointer; overload;
 function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
 function GetNHook(const TargetProc: Pointer): ShortInt;
@@ -2065,7 +2065,7 @@ begin
   end;
 end;
 
-function InterceptCreate(const Module, Method: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = False; Options: Byte = v1compatibility)
+function InterceptCreate(const Module, Method: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
   : Pointer;
 var
   pOrgPointer: Pointer;
