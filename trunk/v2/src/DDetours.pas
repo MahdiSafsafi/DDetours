@@ -1576,6 +1576,101 @@ begin
   FreeMemory(PInst);
 end;
 
+const
+  arNone = $00;
+  arPlus = $08;
+  arMin = $10;
+  arAdd = arPlus or $01;
+  arSub = arMin or $01;
+  arInc = arPlus or $02;
+  arDec = arMin or $02;
+
+function GetInstArithmeticType(PInst: PInstruction): Byte;
+  function IsInstAdd(PInst: PInstruction): Boolean;
+  begin
+    Result := False;
+    if PInst^.OpTable = tbOneByte then
+    begin
+      if (PInst^.OpCode >= $00) and (PInst^.OpCode < $06) then
+        Exit(True);
+    end;
+    if (PInst^.OpKind = kGrp) and (PInst^.ModRm.Reg = $00) then
+    begin
+      if (PInst^.OpCode > $7F) and (PInst^.OpCode < $84) then
+        Exit(True);
+    end;
+  end;
+  function IsInstSub(PInst: PInstruction): Boolean;
+  begin
+    Result := False;
+    if PInst^.OpTable = tbOneByte then
+    begin
+      if (PInst^.OpCode > $27) and (PInst^.OpCode < $2E) then
+        Exit(True);
+    end;
+    if (PInst^.OpKind = kGrp) and (PInst^.ModRm.Reg = $05) then
+    begin
+      if (PInst^.OpCode > $7F) and (PInst^.OpCode < $84) then
+        Exit(True);
+    end;
+  end;
+  function IsInstInc(PInst: PInstruction): Boolean;
+  begin
+    Result := False;
+    if (PInst^.Archi = CPUX32) and (PInst^.OpTable = tbOneByte) then
+    begin
+      if (PInst^.OpCode >= $40) and (PInst^.OpCode <= $47) then
+        Exit(True);
+    end;
+    if (PInst^.OpKind = kGrp) and (PInst^.ModRm.Reg = $00) then
+    begin
+      if (PInst^.OpCode = $FE) or (PInst^.OpCode = $FF) then
+        Exit(True);
+    end;
+  end;
+  function IsInstDec(PInst: PInstruction): Boolean;
+  begin
+    Result := False;
+    if (PInst^.Archi = CPUX32) and (PInst^.OpTable = tbOneByte) then
+    begin
+      if (PInst^.OpCode >= $48) and (PInst^.OpCode <= $4F) then
+        Exit(True);
+    end;
+    if (PInst^.OpKind = kGrp) and (PInst^.ModRm.Reg = $01) then
+    begin
+      if (PInst^.OpCode = $FE) or (PInst^.OpCode = $FF) then
+        Exit(True);
+    end;
+  end;
+
+begin
+  { Return Instruction Arithmetic (+ or - or ..) }
+  Result := arNone;
+  if IsInstAdd(PInst) then
+    Exit(arAdd);
+  if IsInstInc(PInst) then
+    Exit(arAdd);
+  if IsInstSub(PInst) then
+    Exit(arSub);
+  if IsInstDec(PInst) then
+    Exit(arSub);
+end;
+
+function EvalArithU(Arith: Byte; Value: NativeUInt; Offset: NativeInt): NativeUInt;
+begin
+  Result := Value;
+  case Arith of
+    arAdd:
+      Inc(Result, Offset);
+    arInc:
+      Inc(Result);
+    arSub:
+      Dec(Result, Offset);
+    arDec:
+      Dec(Result);
+  end;
+end;
+
 function InterfaceToObj(const AIntf): TObject;
 const
   {
@@ -1584,33 +1679,64 @@ const
     => We must skip them to point to the first function declared in the interface.
   }
   Offset = SizeOf(Pointer) * 3;
+{$IFDEF CPUX64}
+  ObjReg = rECX;
+{$ELSE !CPUX64}
+  ObjReg = rEAX;
+{$ENDIF CPUX64}
 var
   Pvt, PCode: PByte;
   Inst: TInstruction;
   PObj: PByte;
   imm: Int64;
+  Arith: Byte;
+  Skip: Boolean;
 begin
+
   if not Assigned(@AIntf) then
     Exit(nil);
 
-  PObj := nil;
+  PObj := PByte(AIntf);
   Inst := default (TInstruction);
   Inst.Archi := CPUX;
   Pvt := PPointer(AIntf)^; // vTable !
   PCode := PPointer(Pvt + Offset)^; // Code Entry !
-  Inst.Addr := PCode;
-  DecodeInst(@Inst);
+  Inst.NextInst := PCode;
   {
     At the top of code entry delphi will generate :
     int 3
-    add eax/rcx,offset <===
+    add/sub eax/rcx,offset <===
     jmp FirstFunction
   }
-  if Inst.imm.Flags and imfUsed <> 0 then
+
+  while True do
   begin
-    imm := Inst.imm.Value;
-    PObj := PByte(AIntf) + imm;
+    Inst.imm.Value := 0;
+    Inst.Addr := Inst.NextInst;
+    fDecodeInst(@Inst);
+    { Keep looping until JMP/RET ! }
+    if (Inst.Branch.Falgs and bfUsed <> 0) or (Inst.OpType = otRET) then
+      Break;
+
+    Arith := GetInstArithmeticType(@Inst);
+    Skip := (Arith = arNone);
+
+    if not Skip then
+    begin
+      if (Inst.ModRm.Flags and mfUsed <> 0) then
+        Skip := not((Inst.ModRm.iMod = $03) and (Inst.ModRm.Rm = ObjReg))
+      else if Arith in [arInc, arDec] then
+        { Is Inc/Dec EAX/RCX ? }
+        Skip := (Inst.OpCode and $07 <> ObjReg);
+    end;
+
+    if not Skip then
+    begin
+      imm := Inst.imm.Value;
+      PObj := PByte(EvalArithU(Arith, NativeUInt(PObj), imm));
+    end;
   end;
+
   Result := TObject(PObj);
 end;
 
