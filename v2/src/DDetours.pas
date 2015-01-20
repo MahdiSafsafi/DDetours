@@ -54,7 +54,7 @@ uses
   Classes
 {$IFDEF MustUseGenerics}
     , Generics.Collections //
-    , Typinfo
+    , Typinfo, RTTI
 {$ENDIF MustUseGenerics}
     ;
 
@@ -85,8 +85,10 @@ const
   { ======================================================================================================================================================= }
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
-function InterceptCreate(const Module, Method: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
+function InterceptCreate(const TargetInterface; const MethodName: String; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
+function InterceptCreate(const Module, MethodName: String; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
   : Pointer; overload;
+
 function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
 function GetNHook(const TargetProc: Pointer): ShortInt;
 function IsHooked(const TargetProc: Pointer): Boolean;
@@ -1574,7 +1576,45 @@ begin
   FreeMemory(PInst);
 end;
 
-function GetInterfaceMethodPtr(const PInterface; MethodIndex: Integer): PByte;
+function InterfaceToObj(const AIntf): TObject;
+const
+  {
+    Delphi insert QueryInterface,_AddRef,_Release methods
+    as the last functions in the code entry.
+    => We must skip them to point to the first function declared in the interface.
+  }
+  Offset = SizeOf(Pointer) * 3;
+var
+  Pvt, PCode: PByte;
+  Inst: TInstruction;
+  PObj: PByte;
+  imm: Int64;
+begin
+  if not Assigned(@AIntf) then
+    Exit(nil);
+
+  PObj := nil;
+  Inst := default (TInstruction);
+  Inst.Archi := CPUX;
+  Pvt := PPointer(AIntf)^; // vTable !
+  PCode := PPointer(Pvt + Offset)^; // Code Entry !
+  Inst.Addr := PCode;
+  DecodeInst(@Inst);
+  {
+    At the top of code entry delphi will generate :
+    int 3
+    add eax/rcx,offset <===
+    jmp FirstFunction
+  }
+  if Inst.imm.Flags and imfUsed <> 0 then
+  begin
+    imm := Inst.imm.Value;
+    PObj := PByte(AIntf) + imm;
+  end;
+  Result := TObject(PObj);
+end;
+
+function GetInterfaceMethodPtrByIndex(const PInterface; MethodIndex: Integer): PByte;
 var
   Pvt: PPointer;
   P: PPointer;
@@ -1607,6 +1647,41 @@ begin
     end;
   end;
   Result := PDst;
+end;
+
+function GetMethodPtrFromObjByName(Obj: TObject; const MethodName: String): Pointer;
+var
+  LCtx: TRttiContext;
+  LType: TRttiType;
+  LMethods: TArray<TRttiMethod>;
+  LMethod: TRttiMethod;
+begin
+  Result := nil;
+  if (not Assigned(Obj)) or (MethodName = EmptyStr) then
+    Exit;
+
+  LCtx := TRttiContext.Create;
+  LType := LCtx.GetType(Obj.ClassType);
+  LMethods := LType.GetMethods;
+  for LMethod in LMethods do
+  begin
+    if SameText(LMethod.Name, MethodName) then
+      Exit(LMethod.CodeAddress);
+  end;
+end;
+
+function GetInterfaceMethodPtrByName(const PInterface; const MethodName: String): PByte;
+var
+  Obj: TObject;
+begin
+  Result := nil;
+  if (not Assigned(@PInterface)) or (MethodName = EmptyStr) then
+    Exit;
+  Obj := InterfaceToObj(PInterface);
+  if Assigned(Obj) then
+  begin
+    Result := GetMethodPtrFromObjByName(Obj, MethodName);
+  end;
 end;
 
 { TIntercept }
@@ -2052,21 +2127,37 @@ begin
   end;
 end;
 
+{ =====> Support for Interface <===== }
+
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer;
 var
   P: PByte;
 begin
-  { =====> Support for Interface <===== }
   Result := nil;
-  P := GetInterfaceMethodPtr(TargetInterface, MethodIndex);
+  if not Assigned(@TargetInterface) then
+    Exit;
+  P := GetInterfaceMethodPtrByIndex(TargetInterface, MethodIndex);
   if Assigned(P) then
   begin
     Result := InterceptCreate(P, InterceptProc, Options);
   end;
 end;
 
-function InterceptCreate(const Module, Method: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
-  : Pointer;
+function InterceptCreate(const TargetInterface; const MethodName: String; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
+var
+  P: PByte;
+begin
+  Result := nil;
+  if (not Assigned(@TargetInterface)) or (MethodName = EmptyStr) then
+    Exit;
+
+  P := GetInterfaceMethodPtrByName(TargetInterface, MethodName);
+  if Assigned(P) then
+    Result := InterceptCreate(P, InterceptProc, Options);
+end;
+
+function InterceptCreate(const Module, MethodName: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True;
+  Options: Byte = v1compatibility): Pointer;
 var
   pOrgPointer: Pointer;
   LModule: THandle;
@@ -2079,7 +2170,7 @@ begin
 
   if LModule <> 0 then
   begin
-    pOrgPointer := GetProcAddress(LModule, PChar(Method));
+    pOrgPointer := GetProcAddress(LModule, PChar(MethodName));
     if Assigned(pOrgPointer) then
       Result := InterceptCreate(pOrgPointer, InterceptProc, Options);
   end;
