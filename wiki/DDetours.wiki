@@ -159,3 +159,52 @@ begin
   EndUnHooks();
 end.
 }}}
+
+<u>*Hooking Delphi Methods inside interface:*</u>
+{{{
+type
+  IMyInterface = Interface
+    procedure ShowMsg(const Msg: String);
+  end;
+
+  TMyObject = class(TInterfacedObject, IMyInterface)
+  public
+    procedure ShowMsg(const Msg: String);
+  end;
+
+  { TMyObject }
+
+procedure TMyObject.ShowMsg(const Msg: String);
+begin
+  Writeln(Msg);
+end;
+
+var
+  FMyInterface: IMyInterface;
+  TrampolineShowMsg: procedure(const Self; const Msg: String) = nil;
+
+procedure InterceptShowMsg(const Self; const Msg: String);
+begin
+  TrampolineShowMsg(Self, 'Msg Hooked !');
+end;
+}}}
+You can hook using two way:
+
+*Hooking By Method Index:*
+{{{
+begin
+  FMyInterface := TMyObject.Create;
+  @TrampolineShowMsg := InterceptCreate(FMyInterface, 3, @InterceptShowMsg);
+  FMyInterface.ShowMsg('SimpleMsg');
+  ReadLn;
+end.
+}}}
+*Hooking By Method Name:*
+{{{
+begin
+  FMyInterface := TMyObject.Create;
+  @TrampolineShowMsg := InterceptCreate(FMyInterface, 'ShowMsg', @InterceptShowMsg);
+  FMyInterface.ShowMsg('SimpleMsg');
+  ReadLn;
+end.
+}}}
