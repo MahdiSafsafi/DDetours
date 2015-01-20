@@ -42,7 +42,7 @@ This function can hook (redirect) the !TargetProc to the !InterceptProc .
 
 *Module :* Library or Module Name.
 
-*Method :* Function name that you will hook.
+*MethodName :* Function name that you will hook.
 
 *!ForceLoadModule :* if True the DDL will try to load the module/library if it's not loaded.
 
