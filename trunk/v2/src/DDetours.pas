@@ -85,7 +85,6 @@ const
   { ======================================================================================================================================================= }
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
-function InterceptCreate(const TargetInterface; const MethodName: String; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const Module, MethodName: String; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
   : Pointer; overload;
 
@@ -94,6 +93,7 @@ function GetNHook(const TargetProc: Pointer): ShortInt;
 function IsHooked(const TargetProc: Pointer): Boolean;
 
 {$IFDEF MustUseGenerics }
+function InterceptCreate(const TargetInterface; const MethodName: String; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function BeginHooks(): Boolean;
 function EndHooks(): Boolean;
 function BeginUnHooks(): Boolean;
@@ -1775,6 +1775,8 @@ begin
   Result := PDst;
 end;
 
+{$IFDEF MustUseGenerics}
+
 function GetMethodPtrFromObjByName(Obj: TObject; const MethodName: String): Pointer;
 var
   LCtx: TRttiContext;
@@ -1810,13 +1812,11 @@ begin
   end;
 end;
 
-{ TIntercept }
-
-{$IFDEF MustUseGenerics}
-
 var
   GlobalThreadList: TDictionary<THandle, TThreadsIDList>;
+
 {$ENDIF MustUseGenerics}
+  { TIntercept }
 
 constructor TIntercept.Create(Options: Byte);
 begin
@@ -2269,6 +2269,8 @@ begin
   end;
 end;
 
+{$IFDEF MustUseGenerics}
+
 function InterceptCreate(const TargetInterface; const MethodName: String; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 var
   P: PByte;
@@ -2281,6 +2283,7 @@ begin
   if Assigned(P) then
     Result := InterceptCreate(P, InterceptProc, Options);
 end;
+{$ENDIF MustUseGenerics}
 
 function InterceptCreate(const Module, MethodName: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True;
   Options: Byte = v1compatibility): Pointer;
