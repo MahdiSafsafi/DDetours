@@ -1691,11 +1691,13 @@ var
   imm: Int64;
   Arith: Byte;
   Skip: Boolean;
+  sReg: ShortInt;
 begin
 
   if not Assigned(@AIntf) then
     Exit(nil);
 
+  sReg := -1;
   PObj := PByte(AIntf);
   Inst := default (TInstruction);
   Inst.Archi := CPUX;
@@ -1723,11 +1725,31 @@ begin
 
     if not Skip then
     begin
-      if (Inst.ModRm.Flags and mfUsed <> 0) then
-        Skip := not((Inst.ModRm.iMod = $03) and (Inst.ModRm.Rm = ObjReg))
-      else if Arith in [arInc, arDec] then
-        { Is Inc/Dec EAX/RCX ? }
-        Skip := (Inst.OpCode and $07 <> ObjReg);
+{$IFDEF CPUX86}
+      if Inst.ModRm.iMod <> $03 then
+      begin
+        {
+          ====> stdcall ! <====
+          If the method (declared in interface)
+          calling convention is stdcall,
+          Delphi will generate :
+          add/sub [esp+offset],imm !
+        }
+        if Inst.Sib.Flags and sfUsed <> 0 then
+          sReg := Inst.Sib.Index
+        else
+          sReg := Inst.ModRm.Rm;
+        Skip := not(sReg = rESP);
+      end
+      else
+{$ENDIF CPUX86}
+      begin
+        if (Inst.ModRm.Flags and mfUsed <> 0) then
+          Skip := not((Inst.ModRm.iMod = $03) and (Inst.ModRm.Rm = ObjReg))
+        else if Arith in [arInc, arDec] then
+          { Is Inc/Dec EAX/RCX ? }
+          Skip := (Inst.OpCode and $07 <> ObjReg);
+      end;
     end;
 
     if not Skip then
