@@ -24,7 +24,15 @@
 // **************************************************************************************************
 
 { ===============================> CHANGE LOG <======================================================
-  Version2:
+
+  Jan 24,2015:
+  +Added support for vtable patching.
+  +Added GetNHook/IsHooked support for Interface.
+
+  Jan 20,2015:
+  +Added support to hook Delphi Interface by name.
+
+  Version2 , Mahdi Safsafi:
   +Many bug fix.
   +Added new hooking model architecture.
   +Added multi hook support.
@@ -87,13 +95,18 @@ function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const Module, MethodName: String; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
   : Pointer; overload;
-
 function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
-function GetNHook(const TargetProc: Pointer): ShortInt;
-function IsHooked(const TargetProc: Pointer): Boolean;
+function GetNHook(const TargetProc: Pointer): ShortInt; overload;
+function GetNHook(const TargetInterface; MethodIndex: Integer): ShortInt; overload;
+function IsHooked(const TargetProc: Pointer): Boolean; overload;
+function IsHooked(const TargetInterface; MethodIndex: Integer): Boolean; overload;
+function PatchVt(const TargetInterface; MethodIndex: Integer; InterceptProc: Pointer): Pointer;
+function UnPatchVt(const Trampo: Pointer): Boolean;
 
 {$IFDEF MustUseGenerics }
 function InterceptCreate(const TargetInterface; const MethodName: String; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
+function GetNHook(const TargetInterface; const MethodName: String): ShortInt; overload;
+function IsHooked(const TargetInterface; const MethodName: String): Boolean; overload;
 function BeginHooks(): Boolean;
 function EndHooks(): Boolean;
 function BeginUnHooks(): Boolean;
@@ -1585,6 +1598,8 @@ const
   arInc = arPlus or $02;
   arDec = arMin or $02;
 
+{$WARN COMPARISON_TRUE OFF}
+
 function GetInstArithmeticType(PInst: PInstruction): Byte;
   function IsInstAdd(PInst: PInstruction): Boolean;
   begin
@@ -1655,6 +1670,7 @@ begin
   if IsInstDec(PInst) then
     Exit(arSub);
 end;
+{$WARN COMPARISON_TRUE ON}
 
 function EvalArithU(Arith: Byte; Value: NativeUInt; Offset: NativeInt): NativeUInt;
 begin
@@ -1670,6 +1686,8 @@ begin
       Dec(Result);
   end;
 end;
+
+{$HINTS OFF}
 
 function InterfaceToObj(const AIntf): TObject;
 const
@@ -1761,6 +1779,8 @@ begin
 
   Result := TObject(PObj);
 end;
+
+{$HINTS ON}
 
 function GetInterfaceMethodPtrByIndex(const PInterface; MethodIndex: Integer): PByte;
 var
@@ -2364,9 +2384,128 @@ begin
   end;
 end;
 
+function GetNHook(const TargetInterface; MethodIndex: Integer): ShortInt; overload;
+var
+  P: PByte;
+begin
+  P := GetInterfaceMethodPtrByIndex(TargetInterface, MethodIndex);
+  Result := GetNHook(P);
+end;
+
+{$IFDEF MustUseGenerics }
+
+function GetNHook(const TargetInterface; const MethodName: String): ShortInt; overload;
+var
+  P: PByte;
+begin
+  P := GetInterfaceMethodPtrByName(TargetInterface, MethodName);
+  Result := GetNHook(P);
+end;
+{$ENDIF MustUseGenerics }
+
 function IsHooked(const TargetProc: Pointer): Boolean;
 begin
   Result := GetNHook(TargetProc) > 0;
+end;
+
+function IsHooked(const TargetInterface; MethodIndex: Integer): Boolean; overload;
+var
+  P: PByte;
+begin
+  P := GetInterfaceMethodPtrByIndex(TargetInterface, MethodIndex);
+  Result := IsHooked(P);
+end;
+
+{$IFDEF MustUseGenerics }
+
+function IsHooked(const TargetInterface; const MethodName: String): Boolean; overload;
+var
+  P: PByte;
+begin
+  P := GetInterfaceMethodPtrByName(TargetInterface, MethodName);
+  Result := IsHooked(P);
+end;
+{$ENDIF MustUseGenerics }
+
+type
+  TTrampoDataVt = record
+    vAddr: Pointer;
+    Addr: Pointer;
+  end;
+
+  PTrampoDataVt = ^TTrampoDataVt;
+
+function PatchVt(const TargetInterface; MethodIndex: Integer; InterceptProc: Pointer): Pointer;
+var
+  vt: PPointer;
+  P, DstAddr: PPointer;
+  Q: PByte;
+  OrgAccess: DWORD;
+  PInfo: PTrampoDataVt;
+begin
+  {
+    NB: PatchVt does not support multi hook !!
+    PatchVt will patch only vtable !!
+  }
+  Result := nil;
+  if not Assigned(@TargetInterface) then
+    Exit;
+  if not Assigned(InterceptProc) then
+    Exit;
+
+  TInterceptMonitor.Enter;
+
+  vt := PPointer(TargetInterface)^;
+  P := vt;
+  Inc(P, MethodIndex);
+  DstAddr := P^; // address !
+
+  OrgAccess := SetMemPermission(P, 32, PAGE_EXECUTE_READWRITE);
+  P^ := InterceptProc;
+  SetMemPermission(P, 32, OrgAccess);
+
+  Result := VirtualAlloc(nil, 32, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+  SetMemPermission(Result, 32, PAGE_EXECUTE_READWRITE);
+  PInfo := Result;
+  PInfo^.vAddr := P;
+  PInfo^.Addr := DstAddr;
+  Inc(PByte(Result), SizeOf(TTrampoDataVt));
+
+  Q := Result;
+{$IFDEF CPUX64}
+  { Use JMP RipZero ! }
+  PWord(Q)^ := opJmpMem;
+  Inc(Q, 2);
+  PInt32(Q)^ := $00;
+  Inc(Q, 4);
+  PNativeUInt(Q)^ := NativeUInt(DstAddr);
+{$ELSE !CPUX64}
+  PWord(Q)^ := opJmpMem;
+  Inc(Q, 2);
+  PUInt32(Q)^ := UInt32(Q + 4);
+  PUInt32(Q + 4)^ := UInt32(DstAddr);
+{$ENDIF CPUX64}
+  TInterceptMonitor.Leave;
+
+end;
+
+function UnPatchVt(const Trampo: Pointer): Boolean;
+var
+  OrgAccess: DWORD;
+  PInfo: PTrampoDataVt;
+begin
+  if not Assigned(Trampo) then
+    Exit(False);
+
+  TInterceptMonitor.Enter;
+
+  PInfo := PTrampoDataVt(PByte(Trampo) - SizeOf(TTrampoDataVt));
+  OrgAccess := SetMemPermission(PInfo^.vAddr, 32, PAGE_EXECUTE_READWRITE);
+  PPointer(PInfo^.vAddr)^ := PInfo^.Addr;
+  SetMemPermission(PInfo^.vAddr, 32, OrgAccess);
+  Result := VirtualFree(Trampo, 0, MEM_RELEASE);
+
+  TInterceptMonitor.Leave;
 end;
 
 { TInterceptMonitor }
