@@ -233,6 +233,25 @@ type
   TDscrSig = array [0 .. DscrSigSize - 1] of Byte;
   TTrampoData = array [0 .. TrampoSize - 1] of Byte;
 
+  TVirtualProtect = function(lpAddress: Pointer; dwSize: SIZE_T; flNewProtect: DWORD; var OldProtect: DWORD): BOOL; stdcall;
+  TVirtualAlloc = function(lpvAddress: Pointer; dwSize: SIZE_T; flAllocationType, flProtect: DWORD): Pointer; stdcall;
+  TVirtualQuery = function(lpAddress: Pointer; var lpBuffer: TMemoryBasicInformation; dwLength: SIZE_T): SIZE_T; stdcall;
+  TFlushInstructionCache = function(hProcess: THandle; const lpBaseAddress: Pointer; dwSize: SIZE_T): BOOL; stdcall;
+  TGetCurrentProcess = function: THandle; stdcall;
+  TVirtualFree = function(lpAddress: Pointer; dwSize: SIZE_T; dwFreeType: DWORD): BOOL; stdcall;
+
+  TInternalFuncs = record
+    VirtualAlloc: TVirtualAlloc;
+    VirtualFree: TVirtualFree;
+    VirtualProtect: TVirtualProtect;
+    VirtualQuery: TVirtualQuery;
+    FlushInstructionCache: TFlushInstructionCache;
+    GetCurrentProcess: TGetCurrentProcess;
+  end;
+
+var
+  InternalFuncs: TInternalFuncs;
+
 const
   { Descriptor Signature }
 {$IFDEF CPUX64}
@@ -317,11 +336,12 @@ type
   private
     FOptions: Byte;
     FList: TThreadsIDList;
+    class function GetRoot(P: PByte): PByte;
   public
     constructor Create(Options: Byte); virtual;
     destructor Destroy; override;
+
   protected
-    function GetRoot(P: PByte): PByte;
     function GetDescriptor(P: PByte): PDescriptor;
     function IsValidDescriptor(P: PByte): Boolean;
     function CreateNewDescriptor: PDescriptor;
@@ -420,6 +440,7 @@ const
   THREAD_SUSPEND_RESUME = $0002;
 
 function SuspendAllThreads(RTID: TThreadsIDList): Boolean;
+
 var
   hSnap: THandle;
   PID: DWORD;
@@ -465,6 +486,7 @@ begin
 end;
 
 function ResumeSuspendedThreads(RTID: TThreadsIDList): Boolean;
+
 var
   i: Integer;
   TID: DWORD;
@@ -489,19 +511,20 @@ begin
 end;
 
 function SetMemPermission(const P: Pointer; const Size: NativeUInt; const NewProtect: DWORD): DWORD;
+
 const
   PAGE_EXECUTE_FLAGS = PAGE_EXECUTE or PAGE_EXECUTE_READ or PAGE_EXECUTE_READWRITE or PAGE_EXECUTE_WRITECOPY;
 begin
   Result := 0;
   if Assigned(P) and (Size > 0) and (NewProtect > 0) then
   begin
-    if VirtualProtect(P, Size, NewProtect, Result) then
+    if InternalFuncs.VirtualProtect(P, Size, NewProtect, Result) then
       if (NewProtect and PAGE_EXECUTE_FLAGS <> 0) then
         {
           If the protected region will be executed
           => We need to update the cpu cache !
         }
-        FlushInstructionCache(GetCurrentProcess(), P, Size);
+        InternalFuncs.FlushInstructionCache(InternalFuncs.GetCurrentProcess(), P, Size);
   end;
 end;
 
@@ -563,6 +586,7 @@ begin
 end;
 
 function fDecodeInst(PInst: PInstruction): ShortInt;
+
 var
   IsNxtInstData: Boolean;
 begin
@@ -598,6 +622,7 @@ begin
 end;
 
 function AllocMemAt(const Addr: Pointer; const MemSize, flProtect: DWORD): Pointer;
+
 var
   mbi: TMemoryBasicInformation;
   SysInfo: TSystemInfo;
@@ -613,7 +638,7 @@ begin
   P := PByte(Addr);
   if not Assigned(P) then
   begin
-    Result := VirtualAlloc(nil, MemSize, MEM_RESERVE or MEM_COMMIT, flProtect);
+    Result := InternalFuncs.VirtualAlloc(nil, MemSize, MEM_RESERVE or MEM_COMMIT, flProtect);
     Exit;
   end;
 
@@ -624,20 +649,20 @@ begin
 
   if (P < pMin) or (P > pMax) then
     Exit;
-  if VirtualQuery(P, mbi, SizeOf(mbi)) = 0 then
+  if InternalFuncs.VirtualQuery(P, mbi, SizeOf(mbi)) = 0 then
     Exit;
 
   pBase := mbi.BaseAddress;
   Q := pBase;
   while Q < pMax do
   begin
-    if VirtualQuery(Q, mbi, SizeOf(mbi)) = 0 then
+    if InternalFuncs.VirtualQuery(Q, mbi, SizeOf(mbi)) = 0 then
       Exit;
     if (mbi.State = MEM_FREE) and (mbi.RegionSize >= dwAllocGran) and (mbi.RegionSize >= MemSize) then
     begin
       { The address (P) must be multiple of the allocation granularity (dwAllocationGranularity) . }
       P := PByte(RoundMultipleOf(NativeUInt(Q), dwAllocGran));
-      Result := VirtualAlloc(P, MemSize, MEM_RESERVE or MEM_COMMIT, flProtect);
+      Result := InternalFuncs.VirtualAlloc(P, MemSize, MEM_RESERVE or MEM_COMMIT, flProtect);
       if Assigned(Result) then
         Exit;
     end;
@@ -650,12 +675,12 @@ begin
   Q := pBase;
   while Q > pMin do
   begin
-    if VirtualQuery(Q, mbi, SizeOf(mbi)) = 0 then
+    if InternalFuncs.VirtualQuery(Q, mbi, SizeOf(mbi)) = 0 then
       Exit;
     if (mbi.State = MEM_FREE) and (mbi.RegionSize >= dwAllocGran) and (mbi.RegionSize >= MemSize) then
     begin
       P := PByte(RoundMultipleOf(NativeUInt(Q), dwAllocGran));
-      Result := VirtualAlloc(P, MemSize, MEM_RESERVE or MEM_COMMIT, flProtect);
+      Result := InternalFuncs.VirtualAlloc(P, MemSize, MEM_RESERVE or MEM_COMMIT, flProtect);
       if Assigned(Result) then
         Exit;
     end;
@@ -664,6 +689,7 @@ begin
 end;
 
 function TryAllocMemAt(const Addr: Pointer; const MemSize, flProtect: DWORD): Pointer;
+
 var
   MEM_64: DWORD;
 begin
@@ -676,11 +702,12 @@ begin
     if (UInt64(Addr) and $FFFFFFFF00000000 <> 0) then
       MEM_64 := MEM_TOP_DOWN;
 {$ENDIF CPUX64}
-    Result := VirtualAlloc(nil, MemSize, MEM_RESERVE or MEM_COMMIT or MEM_64, flProtect);
+    Result := InternalFuncs.VirtualAlloc(nil, MemSize, MEM_RESERVE or MEM_COMMIT or MEM_64, flProtect);
   end;
 end;
 
 function InsertJmp(Src, Dst: PByte; JmpType: Byte; const DstSave: PByte = nil): ShortInt;
+
 var
   Offset32: Int32;
   Offset64: Int64;
@@ -835,6 +862,7 @@ begin
 end;
 
 function GetJmpType(Src, Dst, DstSave: PByte): Byte;
+
 var
   Offset: Int64;
   OffsetSize: Byte;
@@ -880,6 +908,7 @@ const
     );
 
 function IsMultiBytesNop(const P: PByte; Len: ShortInt = 0): Boolean;
+
 var
   i: Integer;
   nL: Integer;
@@ -900,6 +929,7 @@ begin
 end;
 
 procedure FillMultiNop(var Buff; Size: Integer);
+
 var
   i: Integer;
   nL: Byte;
@@ -935,6 +965,7 @@ end;
 {$ENDIF UseMultiBytesNop}
 
 function IsNop(const P: PByte; Len: ShortInt; MultiBytesNop: Boolean = False): Boolean;
+
 var
   i: Integer;
   Q: PByte;
@@ -967,6 +998,7 @@ begin
 end;
 
 function GetPrefixesCount(Prefixes: WORD): Byte;
+
 var
   Prf: WORD;
   i: Byte;
@@ -989,6 +1021,7 @@ begin
 end;
 
 function GetInstOpCodes(PInst: PInstruction; P: PByte): ShortInt;
+
 var
   nPrfs: Byte;
 begin
@@ -1025,6 +1058,7 @@ begin
 end;
 
 function CorrectJ(PInst: PInstruction; NewAddr: PByte): Integer;
+
 const
   { Convert LOOP instruction to relative word jcc ! }
   LOOP_To_JccZ: array [0 .. 3] of WORD = ($850F, $840F, $840F, $9090);
@@ -1041,6 +1075,7 @@ var
   JmpType: Byte;
   JmpSize: Byte;
   function GetJccOpCode(RelSize: Byte): DWORD;
+
   var
     LOp: Byte;
     Opc: array [0 .. 3] of Byte;
@@ -1377,6 +1412,7 @@ begin
 end;
 
 function CorrectRipDisp(PInst: PInstruction; NewAddr: PByte): Integer;
+
 var
   Offset: Int64;
   P: PByte;
@@ -1456,6 +1492,7 @@ begin
 end;
 
 function CorrectJmpRel(PInst: PInstruction; NewAddr: PByte): Integer;
+
 var
   JmpType: Byte;
 begin
@@ -1465,6 +1502,7 @@ begin
 end;
 
 function CorrectCallRel(PInst: PInstruction; NewAddr: PByte): Integer;
+
 var
   Offset: Int64;
   Relsz: Byte;
@@ -1545,6 +1583,7 @@ begin
 end;
 
 function MapInsts(Addr, NewAddr: PByte; Size: Integer): Integer;
+
 var
   P, Q: PByte;
   PInst: PInstruction;
@@ -1690,6 +1729,7 @@ end;
 {$HINTS OFF}
 
 function InterfaceToObj(const AIntf): TObject;
+
 const
   {
     Delphi insert QueryInterface,_AddRef,_Release methods
@@ -1783,6 +1823,7 @@ end;
 {$HINTS ON}
 
 function GetInterfaceMethodPtrByIndex(const PInterface; MethodIndex: Integer): PByte;
+
 var
   Pvt: PPointer;
   P: PPointer;
@@ -1820,6 +1861,7 @@ end;
 {$IFDEF MustUseGenerics}
 
 function GetMethodPtrFromObjByName(Obj: TObject; const MethodName: String): Pointer;
+
 var
   LCtx: TRttiContext;
   LType: TRttiType;
@@ -1841,6 +1883,7 @@ begin
 end;
 
 function GetInterfaceMethodPtrByName(const PInterface; const MethodName: String): PByte;
+
 var
   Obj: TObject;
 begin
@@ -1900,6 +1943,7 @@ begin
 end;
 
 function TIntercept.GetDescriptor(P: PByte): PDescriptor;
+
 var
   Inst: TInstruction;
   function IsDscrpInst(PInst: PInstruction): Boolean;
@@ -1940,7 +1984,8 @@ begin
   end;
 end;
 
-function TIntercept.GetRoot(P: PByte): PByte;
+class function TIntercept.GetRoot(P: PByte): PByte;
+
 var
   Inst: TInstruction;
 begin
@@ -1981,6 +2026,7 @@ begin
 end;
 
 procedure TIntercept.InsertDescriptor(PAt: PByte; PDscr: PDescriptor);
+
 const
   { JMP from Target to Code Entry }
   kJmpCE = 1;
@@ -1990,6 +2036,7 @@ const
   kJmpTmpJmpRipZCE = 3;
   { JMP (Rip Zero) from Target to Code Entry }
   kJmpRipZCE = 4;
+
 var
   fJmpType: Byte; { First JMP }
 {$IFDEF CPUX64}
@@ -2158,6 +2205,7 @@ begin
 end;
 
 function TIntercept.AddHook(PDscr: PDescriptor; InterceptProc: PByte; const Options: Byte): PByte;
+
 var
   n: ShortInt;
   NxHook: PByte;
@@ -2192,6 +2240,7 @@ begin
 end;
 
 function TIntercept.InstallHook(TargetProc, InterceptProc: PByte; const Options: Byte = $00): PByte;
+
 var
   P: PByte;
   PDscr: PDescriptor;
@@ -2213,6 +2262,7 @@ begin
 end;
 
 procedure TIntercept.RemoveDescriptor(PDscr: PDescriptor);
+
 var
   OrgAccess: DWORD;
   P: PByte;
@@ -2235,7 +2285,7 @@ begin
 
     if Assigned(PDscr^.ExMem) then
     begin
-      vr := VirtualFree(PDscr^.ExMem, 0, MEM_RELEASE);
+      vr := InternalFuncs.VirtualFree(PDscr^.ExMem, 0, MEM_RELEASE);
       if not vr then
         RaiseLastOSError;
     end;
@@ -2248,6 +2298,7 @@ begin
 end;
 
 function TIntercept.RemoveHook(Trampo: PByte): Integer;
+
 var
   PNxtHook: PNextHook;
   PDscr: PDescriptor;
@@ -2284,6 +2335,7 @@ begin
 end;
 
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer;
+
 var
   Intercept: TIntercept;
 begin
@@ -2298,6 +2350,7 @@ end;
 { =====> Support for Interface <===== }
 
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer;
+
 var
   P: PByte;
 begin
@@ -2314,6 +2367,7 @@ end;
 {$IFDEF MustUseGenerics}
 
 function InterceptCreate(const TargetInterface; const MethodName: String; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
+
 var
   P: PByte;
 begin
@@ -2329,6 +2383,7 @@ end;
 
 function InterceptCreate(const Module, MethodName: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True;
   Options: Byte = v1compatibility): Pointer;
+
 var
   pOrgPointer: Pointer;
   LModule: THandle;
@@ -2348,6 +2403,7 @@ begin
 end;
 
 function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
+
 var
   Intercept: TIntercept;
 begin
@@ -2362,6 +2418,7 @@ begin
 end;
 
 function GetNHook(const TargetProc: Pointer): ShortInt;
+
 var
   Intercept: TIntercept;
   PDscr: PDescriptor;
@@ -2385,6 +2442,7 @@ begin
 end;
 
 function GetNHook(const TargetInterface; MethodIndex: Integer): ShortInt; overload;
+
 var
   P: PByte;
 begin
@@ -2395,6 +2453,7 @@ end;
 {$IFDEF MustUseGenerics }
 
 function GetNHook(const TargetInterface; const MethodName: String): ShortInt; overload;
+
 var
   P: PByte;
 begin
@@ -2409,6 +2468,7 @@ begin
 end;
 
 function IsHooked(const TargetInterface; MethodIndex: Integer): Boolean; overload;
+
 var
   P: PByte;
 begin
@@ -2419,6 +2479,7 @@ end;
 {$IFDEF MustUseGenerics }
 
 function IsHooked(const TargetInterface; const MethodName: String): Boolean; overload;
+
 var
   P: PByte;
 begin
@@ -2436,6 +2497,7 @@ type
   PTrampoDataVt = ^TTrampoDataVt;
 
 function PatchVt(const TargetInterface; MethodIndex: Integer; InterceptProc: Pointer): Pointer;
+
 var
   vt: PPointer;
   P, DstAddr: PPointer;
@@ -2464,7 +2526,7 @@ begin
   P^ := InterceptProc;
   SetMemPermission(P, 32, OrgAccess);
 
-  Result := VirtualAlloc(nil, 32, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+  Result := InternalFuncs.VirtualAlloc(nil, 32, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE);
   SetMemPermission(Result, 32, PAGE_EXECUTE_READWRITE);
   PInfo := Result;
   PInfo^.vAddr := P;
@@ -2490,6 +2552,7 @@ begin
 end;
 
 function UnPatchVt(const Trampo: Pointer): Boolean;
+
 var
   OrgAccess: DWORD;
   PInfo: PTrampoDataVt;
@@ -2503,7 +2566,7 @@ begin
   OrgAccess := SetMemPermission(PInfo^.vAddr, 32, PAGE_EXECUTE_READWRITE);
   PPointer(PInfo^.vAddr)^ := PInfo^.Addr;
   SetMemPermission(PInfo^.vAddr, 32, OrgAccess);
-  Result := VirtualFree(Trampo, 0, MEM_RELEASE);
+  Result := InternalFuncs.VirtualFree(Trampo, 0, MEM_RELEASE);
 
   TInterceptMonitor.Leave;
 end;
@@ -2551,6 +2614,7 @@ end;
 { TDetours<T> }
 
 function TDetours<T>.CheckTType: Boolean;
+
 var
   LPInfo: PTypeInfo;
 begin
@@ -2584,6 +2648,7 @@ begin
 end;
 
 procedure TDetours<T>.Disable;
+
 var
   PTrampoline: Pointer;
 begin
@@ -2639,6 +2704,7 @@ end;
 
 { --------------------------------------------------------------------------- }
 function BeginHooks(): Boolean;
+
 var
   List: TThreadsIDList;
 begin
@@ -2648,6 +2714,7 @@ begin
 end;
 
 function EndHooks(): Boolean;
+
 var
   List: TThreadsIDList;
   currThread: THandle;
@@ -2675,6 +2742,68 @@ end;
 
 var
   SysInfo: TSystemInfo;
+
+procedure InitInternalFuncs();
+
+  function CloneFunc(Func: PByte): PByte;
+  var
+    mb, ns, Sb, fn: Byte;
+    P: PByte;
+    Inst: TInstruction;
+  begin
+    Sb := 0;
+    Func := TIntercept.GetRoot(Func);
+    Result := VirtualAlloc(nil, 64, MEM_RESERVE or MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    P := Result;
+    mb := JmpTypeToSize[tJmpRipZ];
+    Inst := default (TInstruction);
+    Inst.Archi := CPUX;
+    Inst.NextInst := Func;
+    while Sb <= mb do
+    begin
+      Inst.Addr := Inst.NextInst;
+      ns := fDecodeInst(@Inst);
+      Inc(Sb, ns);
+    end;
+    fn := MapInsts(Func, P, Sb);
+    Inc(P, fn);
+{$IFDEF CPUX64}
+    InsertJmp(P, Func + Sb, tJmpRipZ);
+{$ELSE !CPUX64}
+    InsertJmp(P, Func + Sb, tJmpRel32);
+{$ENDIF CPUX64}
+  end;
+
+begin
+{$IFDEF HookInternalFuncs}
+  @InternalFuncs.VirtualAlloc := CloneFunc(@VirtualAlloc);
+  @InternalFuncs.VirtualFree := CloneFunc(@VirtualFree);
+  @InternalFuncs.VirtualProtect := CloneFunc(@VirtualProtect);
+  @InternalFuncs.VirtualQuery := CloneFunc(@VirtualQuery);
+  @InternalFuncs.FlushInstructionCache := CloneFunc(@FlushInstructionCache);
+  @InternalFuncs.GetCurrentProcess := CloneFunc(@GetCurrentProcess);
+{$ELSE !HookInternalFuncs}
+  @InternalFuncs.VirtualAlloc := @VirtualAlloc;
+  @InternalFuncs.VirtualFree := @VirtualFree;
+  @InternalFuncs.VirtualProtect := @VirtualProtect;
+  @InternalFuncs.VirtualQuery := @VirtualQuery;
+  @InternalFuncs.FlushInstructionCache := @FlushInstructionCache;
+  @InternalFuncs.GetCurrentProcess := @GetCurrentProcess;
+{$ENDIF HookInternalFuncs}
+end;
+
+procedure FreeInternalFuncs;
+begin
+{$IFDEF HookInternalFuncs}
+  InternalFuncs.VirtualFree(@InternalFuncs.VirtualAlloc, 0, MEM_RELEASE);
+  InternalFuncs.VirtualFree(@InternalFuncs.VirtualProtect, 0, MEM_RELEASE);
+  InternalFuncs.VirtualFree(@InternalFuncs.VirtualQuery, 0, MEM_RELEASE);
+  InternalFuncs.VirtualFree(@InternalFuncs.FlushInstructionCache, 0, MEM_RELEASE);
+  InternalFuncs.VirtualFree(@InternalFuncs.GetCurrentProcess, 0, MEM_RELEASE);
+  // VirtualFree must be the last one !
+  InternalFuncs.VirtualFree(@InternalFuncs.VirtualFree, 0, MEM_RELEASE);
+{$ENDIF HookInternalFuncs}
+end;
 
 initialization
 
@@ -2712,6 +2841,7 @@ begin
 end;
 { The OpenThread function does not exist on OS version < Win XP }
 OpenThreadExist := (@OpenThread <> nil);
+InitInternalFuncs;
 
 finalization
 
@@ -2720,5 +2850,6 @@ finalization
 {$ENDIF MustUseGenerics}
 if (FreeKernel) and (hKernel > 0) then
   FreeLibrary(hKernel);
+FreeInternalFuncs;
 
 end.
