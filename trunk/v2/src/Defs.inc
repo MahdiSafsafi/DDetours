@@ -2,6 +2,8 @@
 {$DEFINE BuildThreadSafe}
 {$DEFINE UseGenerics}
 {$DEFINE UseMultiBytesNop}
+//Define HookInternalFuncs if you want to hook internal functions used by DDL core!
+{.$DEFINE HookInternalFuncs}
 //----------------------------------------------
 {$IFDEF FPC}
   {$IFDEF CPU64}
