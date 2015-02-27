@@ -95,6 +95,7 @@ function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const Module, MethodName: String; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
   : Pointer; overload;
+procedure InterceptCreate(const TargetProc, InterceptProc: Pointer; var TrampoLine: Pointer; Options: Byte = v1compatibility); overload;
 function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
 function GetNHook(const TargetProc: Pointer): ShortInt; overload;
 function GetNHook(const TargetInterface; MethodIndex: Integer): ShortInt; overload;
@@ -129,7 +130,7 @@ type
     procedure SetHook(const TargetProc, InterceptProc: T);
     procedure Enable;
     procedure Disable;
-    property Trampoline: T read NextHook; // Call the original
+    property TrampoLine: T read NextHook; // Call the original
   end;
 
   TDetours<T> = class(TInterfacedObject, IGenericCast<T>, IDetours<T>)
@@ -152,7 +153,7 @@ type
     destructor Destroy; override;
     procedure Enable;
     procedure Disable;
-    property Trampoline: T read NextHook; // Call the original
+    property TrampoLine: T read NextHook; // Call the original
     property Installed: Boolean read GetInstalled;
     property nHook: ShortInt read GetHookCount;
   end;
@@ -486,7 +487,6 @@ begin
 end;
 
 function ResumeSuspendedThreads(RTID: TThreadsIDList): Boolean;
-
 var
   i: Integer;
   TID: DWORD;
@@ -2402,8 +2402,20 @@ begin
   end;
 end;
 
-function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
+procedure InterceptCreate(const TargetProc, InterceptProc: Pointer; var TrampoLine: Pointer; Options: Byte = v1compatibility);
+var
+  Intercept: TIntercept;
 
+begin
+  Intercept := TIntercept.Create(Options);
+  try
+    TrampoLine := Intercept.InstallHook(TargetProc, InterceptProc, Options);
+  finally
+    Intercept.Free;
+  end;
+end;
+
+function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
 var
   Intercept: TIntercept;
 begin
@@ -2614,7 +2626,6 @@ end;
 { TDetours<T> }
 
 function TDetours<T>.CheckTType: Boolean;
-
 var
   LPInfo: PTypeInfo;
 begin
@@ -2648,7 +2659,6 @@ begin
 end;
 
 procedure TDetours<T>.Disable;
-
 var
   PTrampoline: Pointer;
 begin
@@ -2704,7 +2714,6 @@ end;
 
 { --------------------------------------------------------------------------- }
 function BeginHooks(): Boolean;
-
 var
   List: TThreadsIDList;
 begin
@@ -2714,7 +2723,6 @@ begin
 end;
 
 function EndHooks(): Boolean;
-
 var
   List: TThreadsIDList;
   currThread: THandle;
