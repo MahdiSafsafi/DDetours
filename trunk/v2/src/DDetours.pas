@@ -58,7 +58,11 @@ uses
   InstDecode,
   CPUID,
   SysUtils,
+{$IFDEF DXE2UP}
   WinApi.Windows,
+{$ELSE !DXE2UP}
+  Windows,
+{$ENDIF DXE2UP}
   Classes
 {$IFDEF MustUseGenerics}
     , Generics.Collections //
@@ -68,6 +72,9 @@ uses
 
 type
   InterceptException = Exception;
+{$IFNDEF DXE2UP}
+  SIZE_T = NativeUInt;
+{$ENDIF !DXE2UP}
 
 const
   { Maximum allowed number of hooks. }
@@ -169,11 +176,11 @@ implementation
 
 { Delphi }
 uses
-{$IFDEF D2009UP}
+{$IFDEF DXE2UP}
   WinApi.TLHelp32;
-{$ELSE !D2009UP}
+{$ELSE !DXE2UP}
   TLHelp32;
-{$ENDIF D2009UP}
+{$ENDIF DXE2UP}
 {$ELSE FPC}
 
 type

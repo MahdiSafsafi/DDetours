@@ -31,6 +31,12 @@
     {$DEFINE D2009UP }  
     {$DEFINE GenericsExist }
   {$IFEND}
+  {$IF CompilerVersion >=23}
+    {$DEFINE DXE2UP } 
+  {$IFEND}  
+  {$IF CompilerVersion >=24}
+    {$DEFINE DXE3UP } 
+  {$IFEND}    
 {$ENDIF !FPC}
 
 {$IF DEFINED(UseInline) and DEFINED(CanInline)}
