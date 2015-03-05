@@ -172,6 +172,7 @@ const
 
 implementation
 
+{$OVERFLOWCHECKS OFF}
 {$IFNDEF FPC}
 
 { Delphi }
