@@ -23,7 +23,7 @@ This library contains the following functions :
   * **EndUnHooks**
 
 ## InterceptCreate ##
-```
+```delphi
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const Module, Method: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = False; Options: Byte = v1compatibility)
   : Pointer; overload;
@@ -58,7 +58,7 @@ If the function succeeds, the return value is a pointer to the TrampoLine functi
 
 If the function fails , the return value is **nil**.
 ## InterceptRemove ##
-```
+```delphi
 function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
 ```
 Remove the registered hook from the TargetProc.
@@ -68,13 +68,13 @@ Remove the registered hook from the TargetProc.
 **Return:** The function return the number of hook that are still alive.
 
 ## GetNHook ##
-```
+```delphi
 function GetNHook(const TargetProc: Pointer): ShortInt;
 ```
 Return the number of hook which are in current use.
 
 ## IsHooked ##
-```
+```delphi
 function IsHooked(const TargetProc: Pointer): Boolean;
 ```
 Check if TargetProc is hooked.
@@ -84,7 +84,7 @@ Sometimes when hooking a lot of functions, DDL can take some time,because it sus
 
 ## Example : ##
 <u><b>Hooking Api function:</b></u>
-```
+```delphi
 uses
   System.SysUtils,
   WinApi.Windows,
@@ -106,7 +106,7 @@ end.
 ```
 
 <u><b>Hooking COM Object:</b></u>
-```
+```delphi
 
 uses
   System.SysUtils,
@@ -159,7 +159,7 @@ end.
 ```
 
 <u><b>Hooking Delphi Methods inside interface:</b></u>
-```
+```delphi
 type
   IMyInterface = Interface
     procedure ShowMsg(const Msg: String);
@@ -189,7 +189,7 @@ end;
 You can hook using two way:
 
 **Hooking By Method Index:**
-```
+```delphi
 begin
   FMyInterface := TMyObject.Create;
   @TrampolineShowMsg := InterceptCreate(FMyInterface, 3, @InterceptShowMsg);
@@ -198,7 +198,7 @@ begin
 end.
 ```
 **Hooking By Method Name:**
-```
+```delphi
 begin
   FMyInterface := TMyObject.Create;
   @TrampolineShowMsg := InterceptCreate(FMyInterface, 'ShowMsg', @InterceptShowMsg);
@@ -208,14 +208,14 @@ end.
 ```
 
 <u><b>Hooking a Delphi Constructor:</b></u>
-```
+```delphi
 type
   TCreate = function(InstanceOrVMT: Pointer; Alloc: ShortInt; [Constructor Arguments]): Pointer;
 ```
 
 First parameter is a pointer to the VMT, the second is a one byte length argument (a Boolean like type to specify whether to alloc memory or not). After that the object constructors arguments can safely be declared.
 
-```
+```delphi
 type
   TMyObj = class(TObject)
   public
