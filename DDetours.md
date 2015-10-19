@@ -206,3 +206,48 @@ begin
   ReadLn;
 end.
 ```
+
+<u><b>Hooking a Delphi Constructor:</b></u>
+```
+type
+  TCreate = function(InstanceOrVMT: Pointer; Alloc: ShortInt; [Constructor Arguments]): Pointer;
+```
+
+First parameter is a pointer to the VMT, the second is a one byte length argument (a Boolean like type to specify whether to alloc memory or not). After that the object constructors arguments can safely be declared.
+
+```
+type
+  TMyObj = class(TObject)
+  public
+    Constructor Create(Arg: Integer); virtual;
+  end;
+
+type
+  TCreate = function(InstanceOrVMT: Pointer; Alloc: ShortInt; Arg: Integer): Pointer;
+var
+  TrampoCreate: TCreate;
+
+function Hooked(InstanceOrVMT: Pointer; Alloc: ShortInt; Arg: Integer): Pointer;
+begin
+  ShowMessage(IntToStr(Arg));
+  Result := TrampoCreate(InstanceOrVMT, Alloc, Arg);
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  m: TMyObj;
+begin
+  m := TMyObj.Create(5);
+end;
+
+{ TMyObj }
+
+constructor TMyObj.Create(Arg: Integer);
+begin
+  ShowMessage('Created!');
+end;
+
+begin
+  TrampoCreate := InterceptCreate(@TMyObj.Create, @Hooked);
+end
+```
