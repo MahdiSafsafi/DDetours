@@ -172,6 +172,7 @@ const
   SDetoursNotInstalled = 'Detour is not installed; trampoline pointer is nil';
 {$ENDIF MustUseGenerics }
 {$ifdef FPC}
+var
  Critical: TRTLCriticalSection;
 {$endif}
 implementation
@@ -2631,7 +2632,6 @@ begin
   {$endif}
 end;
 
-end;
 
 class procedure TInterceptMonitor.Leave;
 begin
@@ -2796,7 +2796,9 @@ procedure InitInternalFuncs();
     Result := VirtualAlloc(nil, 64, MEM_RESERVE or MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     P := Result;
     mb := JmpTypeToSize[tJmpRipZ];
+    {$ifndef FPC}
     Inst := default (TInstruction);
+    {$endif}
     Inst.Archi := CPUX;
     Inst.NextInst := Func;
     while Sb <= mb do
@@ -2875,7 +2877,7 @@ begin
   @OpenThread := GetProcAddress(hKernel, 'OpenThread');
   @CreateToolhelp32Snapshot := GetProcAddress(hKernel, 'CreateToolhelp32Snapshot');
   @Thread32First := GetProcAddress(hKernel, 'Thread32First');
-  @Thread32Next) := GetProcAddress(hKernel, 'Thread32Next');
+  @Thread32Next := GetProcAddress(hKernel, 'Thread32Next');
 {$ELSE !FPC}
   @OpenThread := GetProcAddress(hKernel, 'OpenThread');
 {$ENDIF !FPC}
