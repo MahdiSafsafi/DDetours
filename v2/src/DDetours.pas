@@ -49,7 +49,9 @@
   ====================================================================================================== }
 
 unit DDetours;
-
+{$ifdef FPC}
+ {$mode Delphi}
+{$endif}
 interface
 
 {$I Defs.inc}
@@ -169,7 +171,10 @@ const
   SInvalidTType = '%s must be procedure.';
   SDetoursNotInstalled = 'Detour is not installed; trampoline pointer is nil';
 {$ENDIF MustUseGenerics }
-
+{$ifdef FPC}
+var
+ Critical: TRTLCriticalSection;
+{$endif}
 implementation
 
 {$OVERFLOWCHECKS OFF}
@@ -1765,7 +1770,9 @@ begin
 
   sReg := -1;
   PObj := PByte(AIntf);
+  {$ifndef FPC}
   Inst := default (TInstruction);
+  {$endif}
   Inst.Archi := CPUX;
   Pvt := PPointer(AIntf)^; // vTable !
   PCode := PPointer(Pvt + Offset)^; // Code Entry !
@@ -1844,7 +1851,9 @@ begin
     => Return first instruction that was
     implemented on Interface object !
   }
-  Inst := Default (TInstruction);
+  {$ifndef FPC}
+  Inst := default (TInstruction);
+  {$endif}
   Inst.Archi := CPUX;
   Pvt := PPointer(PInterface)^; // Virtual Table !
   P := Pvt;
@@ -1967,7 +1976,9 @@ var
 
 begin
   Result := nil;
+  {$ifndef FPC}
   Inst := default (TInstruction);
+  {$endif}
   Inst.Archi := CPUX;
   Inst.VirtualAddr := nil;
   { Find last JMP ! }
@@ -1998,7 +2009,9 @@ var
   Inst: TInstruction;
 begin
   Result := P;
+  {$ifndef FPC}
   Inst := default (TInstruction);
+  {$endif}
   Inst.Addr := P;
   Inst.Archi := CPUX;
   Inst.VirtualAddr := nil;
@@ -2103,7 +2116,9 @@ begin
     JmpKind := kJmpCE;
   end;
 {$ENDIF CPUX64}
+  {$ifndef FPC}
   Inst := default (TInstruction);
+  {$endif}
   Inst.Archi := CPUX;
   Inst.NextInst := P;
   Inst.VirtualAddr := nil;
@@ -2610,8 +2625,13 @@ begin
     others threads must wait before accessing
     detours (Insert/Remove/...).
   }
+  {$ifndef FPC}
   TMonitor.Enter(FLock);
+  {$else}
+  EnterCriticalSection(Critical);
+  {$endif}
 end;
+
 
 class procedure TInterceptMonitor.Leave;
 begin
@@ -2620,7 +2640,11 @@ begin
     job with TIntercept .. others thread
     can now access TIntercept .
   }
+  {$ifndef FPC}
   TMonitor.Exit(FLock);
+  {$else}
+   LeaveCriticalSection(Critical);
+  {$endif}
 end;
 
 {$IFDEF MustUseGenerics }
@@ -2772,7 +2796,9 @@ procedure InitInternalFuncs();
     Result := VirtualAlloc(nil, 64, MEM_RESERVE or MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     P := Result;
     mb := JmpTypeToSize[tJmpRipZ];
+    {$ifndef FPC}
     Inst := default (TInstruction);
+    {$endif}
     Inst.Archi := CPUX;
     Inst.NextInst := Func;
     while Sb <= mb do
@@ -2832,6 +2858,7 @@ if SizeOfAlloc < (TmpSize + TrampoSize + 64) then
   SizeOfAlloc := (TmpSize + TrampoSize + 64);
 {$IFDEF FPC}
 OpenThread := nil;
+InitializeCriticalSection(Critical);
 {$ELSE !FPC}
 @OpenThread := nil;
 {$ENDIF !FPC}
@@ -2847,10 +2874,10 @@ end;
 if hKernel > 0 then
 begin
 {$IFDEF FPC}
-  Pointer(OpenThread) := GetProcAddress(hKernel, 'OpenThread');
-  Pointer(CreateToolhelp32Snapshot) := GetProcAddress(hKernel, 'CreateToolhelp32Snapshot');
-  Pointer(Thread32First) := GetProcAddress(hKernel, 'Thread32First');
-  Pointer(Thread32Next) := GetProcAddress(hKernel, 'Thread32Next');
+  @OpenThread := GetProcAddress(hKernel, 'OpenThread');
+  @CreateToolhelp32Snapshot := GetProcAddress(hKernel, 'CreateToolhelp32Snapshot');
+  @Thread32First := GetProcAddress(hKernel, 'Thread32First');
+  @Thread32Next := GetProcAddress(hKernel, 'Thread32Next');
 {$ELSE !FPC}
   @OpenThread := GetProcAddress(hKernel, 'OpenThread');
 {$ENDIF !FPC}
@@ -2867,5 +2894,7 @@ finalization
 if (FreeKernel) and (hKernel > 0) then
   FreeLibrary(hKernel);
 FreeInternalFuncs;
-
+{$ifdef FPC}
+ DeleteCriticalSection(Critical);
+{$endif}
 end.
