@@ -339,8 +339,8 @@ type
   TThreadsIDList = class(TList);
 
   TInterceptMonitor = class(TObject)
-    class constructor Create;
-    class destructor Destroy;
+    class procedure InternalCreate;
+    class procedure InternalDestroy;
     class var FLock: TObject;
     class procedure Enter;
     class procedure Leave;
@@ -1425,7 +1425,8 @@ begin
 end;
 
 function CorrectRipDisp(PInst: PInstruction; NewAddr: PByte): Integer;
-
+type
+  PNativeUInt = ^NativeUInt;
 var
   Offset: Int64;
   P: PByte;
@@ -2608,12 +2609,12 @@ end;
 
 { TInterceptMonitor }
 
-class constructor TInterceptMonitor.Create;
+class procedure TInterceptMonitor.InternalCreate;
 begin
   FLock := TObject.Create;
 end;
 
-class destructor TInterceptMonitor.Destroy;
+class procedure TInterceptMonitor.InternalDestroy;
 begin
   FreeAndNil(FLock);
 end;
@@ -2848,7 +2849,7 @@ begin
 end;
 
 initialization
-
+TInterceptMonitor.InternalCreate;
 {$IFDEF MustUseGenerics}
   GlobalThreadList := TDictionary<THandle, TThreadsIDList>.Create;
 {$ENDIF MustUseGenerics}
@@ -2897,4 +2898,6 @@ FreeInternalFuncs;
 {$ifdef FPC}
  DeleteCriticalSection(Critical);
 {$endif}
+TInterceptMonitor.InternalDestroy;
+
 end.
