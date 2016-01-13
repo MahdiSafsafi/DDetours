@@ -117,10 +117,10 @@ asm
   PUSH EBX
   MOV EDI,EDX
   CPUID
-  MOV {$ifndef FPC}EDI{$else}[EDI]{$endif}.TCPUIDStruct.rEAX,EAX
-  MOV {$ifndef FPC}EDI{$else}[EDI]{$endif}.TCPUIDStruct.rEBX,EBX
-  MOV {$ifndef FPC}EDI{$else}[EDI]{$endif}.TCPUIDStruct.rECX,ECX
-  MOV {$ifndef FPC}EDI{$else}[EDI]{$endif}.TCPUIDStruct.rEDX,EDX
+  MOV EDI.TCPUIDStruct.rEAX,EAX
+  MOV EDI.TCPUIDStruct.rEBX,EBX
+  MOV EDI.TCPUIDStruct.rECX,ECX
+  MOV EDI.TCPUIDStruct.rEDX,EDX
   POP EBX
   POP ECX
   POP EDI
