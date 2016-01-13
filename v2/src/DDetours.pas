@@ -18,7 +18,7 @@
 // RRUZ
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2015 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2016 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************
@@ -49,9 +49,11 @@
   ====================================================================================================== }
 
 unit DDetours;
-{$ifdef FPC}
- {$mode Delphi}
-{$endif}
+
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 interface
 
 {$I Defs.inc}
@@ -102,8 +104,7 @@ const
   { ======================================================================================================================================================= }
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
-function InterceptCreate(const Module, MethodName: String; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
-  : Pointer; overload;
+function InterceptCreate(const Module, MethodName: String; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility): Pointer; overload;
 procedure InterceptCreate(const TargetProc, InterceptProc: Pointer; var TrampoLine: Pointer; Options: Byte = v1compatibility); overload;
 function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
 function GetNHook(const TargetProc: Pointer): ShortInt; overload;
@@ -171,10 +172,12 @@ const
   SInvalidTType = '%s must be procedure.';
   SDetoursNotInstalled = 'Detour is not installed; trampoline pointer is nil';
 {$ENDIF MustUseGenerics }
-{$ifdef FPC}
+{$IFDEF FPC}
+
 var
- Critical: TRTLCriticalSection;
-{$endif}
+  Critical: TRTLCriticalSection;
+{$ENDIF FPC}
+
 implementation
 
 {$OVERFLOWCHECKS OFF}
@@ -1055,8 +1058,7 @@ begin
         if PInst^.Prefixes and Prf_VEX3 = 0 then
           Inc(Result, 2); // 0F + 38|3A !
       end;
-    tbFPU:
-      Inc(Result, 2); // [$D8..$D9] + ModRm !
+    tbFPU: Inc(Result, 2); // [$D8..$D9] + ModRm !
   end;
   if PInst^.Prefixes and Prf_Vex2 <> 0 then
     Inc(Result); // VEX.P0
@@ -1729,14 +1731,10 @@ function EvalArithU(Arith: Byte; Value: NativeUInt; Offset: NativeInt): NativeUI
 begin
   Result := Value;
   case Arith of
-    arAdd:
-      Inc(Result, Offset);
-    arInc:
-      Inc(Result);
-    arSub:
-      Dec(Result, Offset);
-    arDec:
-      Dec(Result);
+    arAdd: Inc(Result, Offset);
+    arInc: Inc(Result);
+    arSub: Dec(Result, Offset);
+    arDec: Dec(Result);
   end;
 end;
 
@@ -1771,9 +1769,9 @@ begin
 
   sReg := -1;
   PObj := PByte(AIntf);
-  {$ifndef FPC}
+{$IFNDEF FPC}
   Inst := default (TInstruction);
-  {$endif}
+{$ENDIF !FPC}
   Inst.Archi := CPUX;
   Pvt := PPointer(AIntf)^; // vTable !
   PCode := PPointer(Pvt + Offset)^; // Code Entry !
@@ -1852,9 +1850,9 @@ begin
     => Return first instruction that was
     implemented on Interface object !
   }
-  {$ifndef FPC}
+{$IFNDEF FPC}
   Inst := default (TInstruction);
-  {$endif}
+{$ENDIF !FPC}
   Inst.Archi := CPUX;
   Pvt := PPointer(PInterface)^; // Virtual Table !
   P := Pvt;
@@ -1977,9 +1975,9 @@ var
 
 begin
   Result := nil;
-  {$ifndef FPC}
+{$IFNDEF FPC}
   Inst := default (TInstruction);
-  {$endif}
+{$ENDIF !FPC}
   Inst.Archi := CPUX;
   Inst.VirtualAddr := nil;
   { Find last JMP ! }
@@ -2010,9 +2008,9 @@ var
   Inst: TInstruction;
 begin
   Result := P;
-  {$ifndef FPC}
+{$IFNDEF FPC}
   Inst := default (TInstruction);
-  {$endif}
+{$ENDIF !FPC}
   Inst.Addr := P;
   Inst.Archi := CPUX;
   Inst.VirtualAddr := nil;
@@ -2117,9 +2115,9 @@ begin
     JmpKind := kJmpCE;
   end;
 {$ENDIF CPUX64}
-  {$ifndef FPC}
+{$IFNDEF FPC}
   Inst := default (TInstruction);
-  {$endif}
+{$ENDIF !FPC}
   Inst.Archi := CPUX;
   Inst.NextInst := P;
   Inst.VirtualAddr := nil;
@@ -2405,8 +2403,7 @@ begin
 end;
 {$ENDIF MustUseGenerics}
 
-function InterceptCreate(const Module, MethodName: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True;
-  Options: Byte = v1compatibility): Pointer;
+function InterceptCreate(const Module, MethodName: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility): Pointer;
 
 var
   pOrgPointer: Pointer;
@@ -2626,13 +2623,12 @@ begin
     others threads must wait before accessing
     detours (Insert/Remove/...).
   }
-  {$ifndef FPC}
+{$IFNDEF FPC}
   TMonitor.Enter(FLock);
-  {$else}
+{$ELSE FPC}
   EnterCriticalSection(Critical);
-  {$endif}
+{$ENDIF !FPC}
 end;
-
 
 class procedure TInterceptMonitor.Leave;
 begin
@@ -2641,11 +2637,11 @@ begin
     job with TIntercept .. others thread
     can now access TIntercept .
   }
-  {$ifndef FPC}
+{$IFNDEF FPC}
   TMonitor.Exit(FLock);
-  {$else}
-   LeaveCriticalSection(Critical);
-  {$endif}
+{$ELSE}
+  LeaveCriticalSection(Critical);
+{$ENDIF}
 end;
 
 {$IFDEF MustUseGenerics }
@@ -2797,9 +2793,9 @@ procedure InitInternalFuncs();
     Result := VirtualAlloc(nil, 64, MEM_RESERVE or MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     P := Result;
     mb := JmpTypeToSize[tJmpRipZ];
-    {$ifndef FPC}
+{$IFNDEF FPC}
     Inst := default (TInstruction);
-    {$endif}
+{$ENDIF !FPC}
     Inst.Archi := CPUX;
     Inst.NextInst := Func;
     while Sb <= mb do
@@ -2849,9 +2845,10 @@ begin
 end;
 
 initialization
+
 TInterceptMonitor.InternalCreate;
 {$IFDEF MustUseGenerics}
-  GlobalThreadList := TDictionary<THandle, TThreadsIDList>.Create;
+GlobalThreadList := TDictionary<THandle, TThreadsIDList>.Create;
 {$ENDIF MustUseGenerics}
 GetSystemInfo(SysInfo);
 SizeOfAlloc := SysInfo.dwPageSize;
@@ -2895,9 +2892,9 @@ finalization
 if (FreeKernel) and (hKernel > 0) then
   FreeLibrary(hKernel);
 FreeInternalFuncs;
-{$ifdef FPC}
- DeleteCriticalSection(Critical);
-{$endif}
+{$IFDEF FPC}
+DeleteCriticalSection(Critical);
+{$ENDIF FPC}
 TInterceptMonitor.InternalDestroy;
 
 end.

@@ -14,15 +14,16 @@
 // The Original Code is CPUID.pas.
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2015 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2016 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************
 
 unit CPUID;
-{$ifdef FPC}
- {$mode Delphi}
-{$endif}
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 interface
 
 {$I Defs.inc}
@@ -117,10 +118,17 @@ asm
   PUSH EBX
   MOV EDI,EDX
   CPUID
+  {$IFNDEF FPC}
   MOV EDI.TCPUIDStruct.rEAX,EAX
   MOV EDI.TCPUIDStruct.rEBX,EBX
   MOV EDI.TCPUIDStruct.rECX,ECX
   MOV EDI.TCPUIDStruct.rEDX,EDX
+  {$ELSE FPC}
+  MOV [EDI].TCPUIDStruct.rEAX,EAX
+  MOV [EDI].TCPUIDStruct.rEBX,EBX
+  MOV [EDI].TCPUIDStruct.rECX,ECX
+  MOV [EDI].TCPUIDStruct.rEDX,EDX
+  {$ENDIF !FPC}
   POP EBX
   POP ECX
   POP EDI
@@ -256,8 +264,7 @@ begin
     CallCPUID(1, Info);
     r := Info.rEAX and $F00;
     case r of
-      $F00, $600:
-        Include(CPUInsts, iMultiNop);
+      $F00, $600: Include(CPUInsts, iMultiNop);
     end;
     if ___IsAVXSupported then
       Include(CPUEncoding, VEX);
