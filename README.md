@@ -1,4 +1,4 @@
-The **Delphi Detours Library** is a library allowing you to hook delphi and windows API functions .It provides an easy way to insert and remove hook.
+The **Delphi Detours Library** is a library allowing you to hook Delphi and Windows API functions. It provides an easy way to insert and remove hook.
 
 ## What's new in Version 2: ##
 Please check [Version2](https://github.com/MahdiSafsafi/delphi-detours-library/blob/wiki/Version2.md) wiki page
@@ -16,15 +16,15 @@ Please check [Version2](https://github.com/MahdiSafsafi/delphi-detours-library/b
   * 64 bit address is supported.
   * The library does not use any external library.
   * The library can insert and remove the hook at any time.
-  * The library contains InstDecode library , that allow to you to decode cpu instructions (x86 & x64).
+  * The library contains InstDecode library, that allow to you to decode CPU instructions (x86 & x64).
 
-This project contians two sub projects : **The Detours Library** and **the InstDecode library**.
+This project contains two sub projects : **The Detours Library** and **the InstDecode library**.
 
-The InstDecode Library is a library that can decode both (x86-x64) instructions .You can consider it as a small disassembler routine .
+The InstDecode Library is a library that can decode both (x86-x64) instructions. You can consider it as a small disassembler routine.
 It can decode instruction and getting information about the instruction (size of instruction,displacement,immediate data, jump address,..) without displaying mnemonics making it very faster and small in compiled size.
 
-This two library was coded in pure pascal language with delphi XE7.
+These two libraries were coded in pure Pascal language with Delphi XE7.
 
-See the [Wiki](https://github.com/MahdiSafsafi/delphi-detours-library/tree/wiki) page for more information about how to use the library .
+See the [Wiki](https://github.com/MahdiSafsafi/delphi-detours-library/tree/wiki) page for more information about how to use the library.
 
-Please , if you find any bug , feel free to report it .
+Please, if you find any bug, feel free to report it.
