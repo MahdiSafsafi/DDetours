@@ -5,9 +5,9 @@ program Hook_Overloaded_Method;
 
 uses
   System.SysUtils,
-  CPUID in '..\..\..\..\src\CPUID.pas',
-  DDetours in '..\..\..\..\src\DDetours.pas',
-  InstDecode in '..\..\..\..\src\InstDecode.pas';
+  CPUID in '..\..\..\..\Source\CPUID.pas',
+  DDetours in '..\..\..\..\Source\DDetours.pas',
+  InstDecode in '..\..\..\..\Source\InstDecode.pas';
 
 type
   TShowMsg = procedure(Value: Integer);

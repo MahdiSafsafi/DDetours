@@ -1,11 +1,12 @@
+// JCL_DEBUG_EXPERT_GENERATEJDBG OFF
 program Demo1;
 
 uses
   Vcl.Forms,
   uMain in 'uMain.pas' {Main},
-  CPUID in '..\..\..\..\..\src\CPUID.pas',
-  DDetours in '..\..\..\..\..\src\DDetours.pas',
-  InstDecode in '..\..\..\..\..\src\InstDecode.pas';
+  CPUID in '..\..\..\..\..\Source\CPUID.pas',
+  DDetours in '..\..\..\..\..\Source\DDetours.pas',
+  InstDecode in '..\..\..\..\..\Source\InstDecode.pas';
 
 {$R *.res}
 

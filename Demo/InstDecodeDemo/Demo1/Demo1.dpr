@@ -1,3 +1,4 @@
+// JCL_DEBUG_EXPERT_GENERATEJDBG OFF
 program Demo1;
 
 {$APPTYPE CONSOLE}
@@ -5,7 +6,7 @@ program Demo1;
 
 uses
   System.SysUtils,
-  InstDecode in '..\..\..\src\InstDecode.pas';
+  InstDecode in '..\..\..\Source\InstDecode.pas';
 
 procedure Foo;
 asm
