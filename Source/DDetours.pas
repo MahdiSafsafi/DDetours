@@ -104,7 +104,8 @@ const
   { ======================================================================================================================================================= }
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
-function InterceptCreate(const Module, MethodName: String; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility): Pointer; overload;
+function InterceptCreate(const Module, MethodName: String; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility)
+  : Pointer; overload;
 procedure InterceptCreate(const TargetProc, InterceptProc: Pointer; var TrampoLine: Pointer; Options: Byte = v1compatibility); overload;
 function InterceptRemove(const Trampo: Pointer; Options: Byte = v1compatibility): Integer;
 function GetNHook(const TargetProc: Pointer): ShortInt; overload;
@@ -457,46 +458,40 @@ const
   THREAD_SUSPEND_RESUME = $0002;
 
 function SuspendAllThreads(RTID: TThreadsIDList): Boolean;
-
 var
   hSnap: THandle;
   PID: DWORD;
   te: TThreadEntry32;
   nCount: DWORD;
   hThread: THandle;
+  Next: Boolean;
+  CurrentThreadId: Cardinal;
 begin
   PID := GetCurrentProcessId;
-
+  CurrentThreadId := GetCurrentThreadId;
   hSnap := CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, PID);
-
   Result := hSnap <> INVALID_HANDLE_VALUE;
-
   if Result then
   begin
     te.dwSize := SizeOf(TThreadEntry32);
-    if Thread32First(hSnap, te) then
+    Next := Thread32First(hSnap, te);
+    while Next do
     begin
-      while True do
+      if (te.th32OwnerProcessID = PID) and (te.th32ThreadID <> CurrentThreadId) then
       begin
-        if te.th32OwnerProcessID = PID then
-          { Allow the caller thread to access the Detours .
-            => Suspend all threads ,except the current thread .
-          }
-          if te.th32ThreadID <> GetCurrentThreadId then
-          begin
-            hThread := OpenThread(THREAD_SUSPEND_RESUME, False, te.th32ThreadID);
-            if hThread <> INVALID_HANDLE_VALUE then
-            begin
-              nCount := SuspendThread(hThread);
-              if nCount <> DWORD(-1) then // thread's previously was running  .
-                { Only add threads that was running before suspending them ! }
-                RTID.Add(Pointer(NativeUInt(te.th32ThreadID)));
-              CloseHandle(hThread);
-            end;
-          end;
-        if not Thread32Next(hSnap, te) then
-          Break;
+        { Allow the caller thread to access the Detours .
+          => Suspend all threads, except the current thread . }
+        hThread := OpenThread(THREAD_SUSPEND_RESUME, False, te.th32ThreadID);
+        if hThread <> INVALID_HANDLE_VALUE then
+        begin
+          nCount := SuspendThread(hThread);
+          if nCount <> DWORD(-1) then // thread's previously was running  .
+            { Only add threads that was running before suspending them ! }
+            RTID.Add(Pointer(NativeUInt(te.th32ThreadID)));
+          CloseHandle(hThread);
+        end;
       end;
+      Next := Thread32Next(hSnap, te);
     end;
     CloseHandle(hSnap);
   end;
@@ -527,7 +522,6 @@ begin
 end;
 
 function SetMemPermission(const P: Pointer; const Size: NativeUInt; const NewProtect: DWORD): DWORD;
-
 const
   PAGE_EXECUTE_FLAGS = PAGE_EXECUTE or PAGE_EXECUTE_READ or PAGE_EXECUTE_READWRITE or PAGE_EXECUTE_WRITECOPY;
 begin
@@ -555,9 +549,7 @@ begin
         Exit(ops16bits)
       else
         Exit(ops32bits);
-    end
-    else
-    begin
+    end else begin
       case PInst^.OperandFlags of
         opdD64:
           begin
@@ -1339,9 +1331,7 @@ begin
             end;
         end;
       end;
-    end
-    else
-    begin
+    end else begin
       { Jcc ! }
       NOpc := GetJccOpCode(Relsz);
       case Relsz of
@@ -1950,9 +1940,7 @@ begin
   begin
     ResumeSuspendedThreads(FList);
     FreeAndNil(FList);
-  end
-  else
-  begin
+  end else begin
     TInterceptMonitor.Leave();
   end;
   inherited;
@@ -2109,9 +2097,7 @@ begin
           JmpKind := kJmpTmpJmpCE;
       end;
     end;
-  end
-  else
-  begin
+  end else begin
     JmpKind := kJmpCE;
   end;
 {$ENDIF CPUX64}
@@ -2403,7 +2389,8 @@ begin
 end;
 {$ENDIF MustUseGenerics}
 
-function InterceptCreate(const Module, MethodName: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True; Options: Byte = v1compatibility): Pointer;
+function InterceptCreate(const Module, MethodName: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True;
+  Options: Byte = v1compatibility): Pointer;
 
 var
   pOrgPointer: Pointer;
