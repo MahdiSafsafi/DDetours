@@ -594,7 +594,6 @@ begin
 end;
 
 function fDecodeInst(PInst: PInstruction): ShortInt;
-
 var
   IsNxtInstData: Boolean;
 begin
@@ -630,7 +629,6 @@ begin
 end;
 
 function AllocMemAt(const Addr: Pointer; const MemSize, flProtect: DWORD): Pointer;
-
 var
   mbi: TMemoryBasicInformation;
   SysInfo: TSystemInfo;
@@ -697,7 +695,6 @@ begin
 end;
 
 function TryAllocMemAt(const Addr: Pointer; const MemSize, flProtect: DWORD): Pointer;
-
 var
   MEM_64: DWORD;
 begin
@@ -715,7 +712,6 @@ begin
 end;
 
 function InsertJmp(Src, Dst: PByte; JmpType: Byte; const DstSave: PByte = nil): ShortInt;
-
 var
   Offset32: Int32;
   Offset64: Int64;
@@ -870,7 +866,6 @@ begin
 end;
 
 function GetJmpType(Src, Dst, DstSave: PByte): Byte;
-
 var
   Offset: Int64;
   OffsetSize: Byte;
@@ -916,7 +911,6 @@ const
     );
 
 function IsMultiBytesNop(const P: PByte; Len: ShortInt = 0): Boolean;
-
 var
   i: Integer;
   nL: Integer;
@@ -937,7 +931,6 @@ begin
 end;
 
 procedure FillMultiNop(var Buff; Size: Integer);
-
 var
   i: Integer;
   nL: Byte;
@@ -973,7 +966,6 @@ end;
 {$ENDIF UseMultiBytesNop}
 
 function IsNop(const P: PByte; Len: ShortInt; MultiBytesNop: Boolean = False): Boolean;
-
 var
   i: Integer;
   Q: PByte;
@@ -1006,7 +998,6 @@ begin
 end;
 
 function GetPrefixesCount(Prefixes: WORD): Byte;
-
 var
   Prf: WORD;
   i: Byte;
@@ -1029,7 +1020,6 @@ begin
 end;
 
 function GetInstOpCodes(PInst: PInstruction; P: PByte): ShortInt;
-
 var
   nPrfs: Byte;
 begin
@@ -1065,13 +1055,11 @@ begin
 end;
 
 function CorrectJ(PInst: PInstruction; NewAddr: PByte): Integer;
-
 const
   { Convert LOOP instruction to relative word jcc ! }
   LOOP_To_JccZ: array [0 .. 3] of WORD = ($850F, $840F, $840F, $9090);
   { Convert LOOP instruction to relative byte jcc ! }
   LOOP_To_JccB: array [0 .. 3] of Byte = ($75, $74, $75, $90);
-
 var
   Offset: Int64;
   POpc: PByte;
@@ -1082,7 +1070,6 @@ var
   JmpType: Byte;
   JmpSize: Byte;
   function GetJccOpCode(RelSize: Byte): DWORD;
-
   var
     LOp: Byte;
     Opc: array [0 .. 3] of Byte;
@@ -1498,7 +1485,6 @@ begin
 end;
 
 function CorrectJmpRel(PInst: PInstruction; NewAddr: PByte): Integer;
-
 var
   JmpType: Byte;
 begin
@@ -1508,7 +1494,6 @@ begin
 end;
 
 function CorrectCallRel(PInst: PInstruction; NewAddr: PByte): Integer;
-
 var
   Offset: Int64;
   Relsz: Byte;
@@ -1589,7 +1574,6 @@ begin
 end;
 
 function MapInsts(Addr, NewAddr: PByte; Size: Integer): Integer;
-
 var
   P, Q: PByte;
   PInst: PInstruction;
@@ -1731,7 +1715,6 @@ end;
 {$HINTS OFF}
 
 function InterfaceToObj(const AIntf): TObject;
-
 const
   {
     Delphi insert QueryInterface,_AddRef,_Release methods
@@ -1827,7 +1810,6 @@ end;
 {$HINTS ON}
 
 function GetInterfaceMethodPtrByIndex(const PInterface; MethodIndex: Integer): PByte;
-
 var
   Pvt: PPointer;
   P: PPointer;
@@ -1867,7 +1849,6 @@ end;
 {$IFDEF MustUseGenerics}
 
 function GetMethodPtrFromObjByName(Obj: TObject; const MethodName: String): Pointer;
-
 var
   LCtx: TRttiContext;
   LType: TRttiType;
@@ -1889,7 +1870,6 @@ begin
 end;
 
 function GetInterfaceMethodPtrByName(const PInterface; const MethodName: String): PByte;
-
 var
   Obj: TObject;
 begin
@@ -1947,7 +1927,6 @@ begin
 end;
 
 function TIntercept.GetDescriptor(P: PByte): PDescriptor;
-
 var
   Inst: TInstruction;
   function IsDscrpInst(PInst: PInstruction): Boolean;
@@ -1991,7 +1970,6 @@ begin
 end;
 
 class function TIntercept.GetRoot(P: PByte): PByte;
-
 var
   Inst: TInstruction;
 begin
@@ -2034,7 +2012,6 @@ begin
 end;
 
 procedure TIntercept.InsertDescriptor(PAt: PByte; PDscr: PDescriptor);
-
 const
   { JMP from Target to Code Entry }
   kJmpCE = 1;
@@ -2213,7 +2190,6 @@ begin
 end;
 
 function TIntercept.AddHook(PDscr: PDescriptor; InterceptProc: PByte; const Options: Byte): PByte;
-
 var
   n: ShortInt;
   NxHook: PByte;
@@ -2248,7 +2224,6 @@ begin
 end;
 
 function TIntercept.InstallHook(TargetProc, InterceptProc: PByte; const Options: Byte = $00): PByte;
-
 var
   P: PByte;
   PDscr: PDescriptor;
@@ -2270,7 +2245,6 @@ begin
 end;
 
 procedure TIntercept.RemoveDescriptor(PDscr: PDescriptor);
-
 var
   OrgAccess: DWORD;
   P: PByte;
@@ -2306,7 +2280,6 @@ begin
 end;
 
 function TIntercept.RemoveHook(Trampo: PByte): Integer;
-
 var
   PNxtHook: PNextHook;
   PDscr: PDescriptor;
@@ -2343,7 +2316,6 @@ begin
 end;
 
 function InterceptCreate(const TargetProc, InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer;
-
 var
   Intercept: TIntercept;
 begin
@@ -2358,7 +2330,6 @@ end;
 { =====> Support for Interface <===== }
 
 function InterceptCreate(const TargetInterface; MethodIndex: Integer; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer;
-
 var
   P: PByte;
 begin
@@ -2375,7 +2346,6 @@ end;
 {$IFDEF MustUseGenerics}
 
 function InterceptCreate(const TargetInterface; const MethodName: String; const InterceptProc: Pointer; Options: Byte = v1compatibility): Pointer; overload;
-
 var
   P: PByte;
 begin
@@ -2391,7 +2361,6 @@ end;
 
 function InterceptCreate(const Module, MethodName: string; const InterceptProc: Pointer; ForceLoadModule: Boolean = True;
   Options: Byte = v1compatibility): Pointer;
-
 var
   pOrgPointer: Pointer;
   LModule: THandle;
@@ -2413,7 +2382,6 @@ end;
 procedure InterceptCreate(const TargetProc, InterceptProc: Pointer; var TrampoLine: Pointer; Options: Byte = v1compatibility);
 var
   Intercept: TIntercept;
-
 begin
   Intercept := TIntercept.Create(Options);
   try
@@ -2438,7 +2406,6 @@ begin
 end;
 
 function GetNHook(const TargetProc: Pointer): ShortInt;
-
 var
   Intercept: TIntercept;
   PDscr: PDescriptor;
@@ -2462,7 +2429,6 @@ begin
 end;
 
 function GetNHook(const TargetInterface; MethodIndex: Integer): ShortInt; overload;
-
 var
   P: PByte;
 begin
@@ -2473,7 +2439,6 @@ end;
 {$IFDEF MustUseGenerics }
 
 function GetNHook(const TargetInterface; const MethodName: String): ShortInt; overload;
-
 var
   P: PByte;
 begin
@@ -2488,7 +2453,6 @@ begin
 end;
 
 function IsHooked(const TargetInterface; MethodIndex: Integer): Boolean; overload;
-
 var
   P: PByte;
 begin
@@ -2499,7 +2463,6 @@ end;
 {$IFDEF MustUseGenerics }
 
 function IsHooked(const TargetInterface; const MethodName: String): Boolean; overload;
-
 var
   P: PByte;
 begin
@@ -2517,7 +2480,6 @@ type
   PTrampoDataVt = ^TTrampoDataVt;
 
 function PatchVt(const TargetInterface; MethodIndex: Integer; InterceptProc: Pointer): Pointer;
-
 var
   vt: PPointer;
   P, DstAddr: PPointer;
@@ -2536,43 +2498,43 @@ begin
     Exit;
 
   TInterceptMonitor.Enter;
+  try
+    vt := PPointer(TargetInterface)^;
+    P := vt;
+    Inc(P, MethodIndex);
+    DstAddr := P^; // address !
 
-  vt := PPointer(TargetInterface)^;
-  P := vt;
-  Inc(P, MethodIndex);
-  DstAddr := P^; // address !
+    OrgAccess := SetMemPermission(P, 32, PAGE_EXECUTE_READWRITE);
+    P^ := InterceptProc;
+    SetMemPermission(P, 32, OrgAccess);
 
-  OrgAccess := SetMemPermission(P, 32, PAGE_EXECUTE_READWRITE);
-  P^ := InterceptProc;
-  SetMemPermission(P, 32, OrgAccess);
+    Result := InternalFuncs.VirtualAlloc(nil, 32, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    SetMemPermission(Result, 32, PAGE_EXECUTE_READWRITE);
+    PInfo := Result;
+    PInfo^.vAddr := P;
+    PInfo^.Addr := DstAddr;
+    Inc(PByte(Result), SizeOf(TTrampoDataVt));
 
-  Result := InternalFuncs.VirtualAlloc(nil, 32, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-  SetMemPermission(Result, 32, PAGE_EXECUTE_READWRITE);
-  PInfo := Result;
-  PInfo^.vAddr := P;
-  PInfo^.Addr := DstAddr;
-  Inc(PByte(Result), SizeOf(TTrampoDataVt));
-
-  Q := Result;
+    Q := Result;
 {$IFDEF CPUX64}
-  { Use JMP RipZero ! }
-  PWord(Q)^ := opJmpMem;
-  Inc(Q, 2);
-  PInt32(Q)^ := $00;
-  Inc(Q, 4);
-  PNativeUInt(Q)^ := NativeUInt(DstAddr);
+    { Use JMP RipZero ! }
+    PWord(Q)^ := opJmpMem;
+    Inc(Q, 2);
+    PInt32(Q)^ := $00;
+    Inc(Q, 4);
+    PNativeUInt(Q)^ := NativeUInt(DstAddr);
 {$ELSE !CPUX64}
-  PWord(Q)^ := opJmpMem;
-  Inc(Q, 2);
-  PUInt32(Q)^ := UInt32(Q + 4);
-  PUInt32(Q + 4)^ := UInt32(DstAddr);
+    PWord(Q)^ := opJmpMem;
+    Inc(Q, 2);
+    PUInt32(Q)^ := UInt32(Q + 4);
+    PUInt32(Q + 4)^ := UInt32(DstAddr);
 {$ENDIF CPUX64}
-  TInterceptMonitor.Leave;
-
+  finally
+    TInterceptMonitor.Leave;
+  end;
 end;
 
 function UnPatchVt(const Trampo: Pointer): Boolean;
-
 var
   OrgAccess: DWORD;
   PInfo: PTrampoDataVt;
@@ -2581,14 +2543,15 @@ begin
     Exit(False);
 
   TInterceptMonitor.Enter;
-
-  PInfo := PTrampoDataVt(PByte(Trampo) - SizeOf(TTrampoDataVt));
-  OrgAccess := SetMemPermission(PInfo^.vAddr, 32, PAGE_EXECUTE_READWRITE);
-  PPointer(PInfo^.vAddr)^ := PInfo^.Addr;
-  SetMemPermission(PInfo^.vAddr, 32, OrgAccess);
-  Result := InternalFuncs.VirtualFree(Trampo, 0, MEM_RELEASE);
-
-  TInterceptMonitor.Leave;
+  try
+    PInfo := PTrampoDataVt(PByte(Trampo) - SizeOf(TTrampoDataVt));
+    OrgAccess := SetMemPermission(PInfo^.vAddr, 32, PAGE_EXECUTE_READWRITE);
+    PPointer(PInfo^.vAddr)^ := PInfo^.Addr;
+    SetMemPermission(PInfo^.vAddr, 32, OrgAccess);
+    Result := InternalFuncs.VirtualFree(Trampo, 0, MEM_RELEASE);
+  finally
+    TInterceptMonitor.Leave;
+  end;
 end;
 
 { TInterceptMonitor }
