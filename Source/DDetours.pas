@@ -2505,8 +2505,11 @@ begin
     DstAddr := P^; // address !
 
     OrgAccess := SetMemPermission(P, 32, PAGE_EXECUTE_READWRITE);
-    P^ := InterceptProc;
-    SetMemPermission(P, 32, OrgAccess);
+    try
+      P^ := InterceptProc;
+    finally
+      SetMemPermission(P, 32, OrgAccess);
+    end;
 
     Result := InternalFuncs.VirtualAlloc(nil, 32, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     SetMemPermission(Result, 32, PAGE_EXECUTE_READWRITE);
@@ -2546,8 +2549,11 @@ begin
   try
     PInfo := PTrampoDataVt(PByte(Trampo) - SizeOf(TTrampoDataVt));
     OrgAccess := SetMemPermission(PInfo^.vAddr, 32, PAGE_EXECUTE_READWRITE);
-    PPointer(PInfo^.vAddr)^ := PInfo^.Addr;
-    SetMemPermission(PInfo^.vAddr, 32, OrgAccess);
+    try
+      PPointer(PInfo^.vAddr)^ := PInfo^.Addr;
+    finally
+      SetMemPermission(PInfo^.vAddr, 32, OrgAccess);
+    end;
     Result := InternalFuncs.VirtualFree(Trampo, 0, MEM_RELEASE);
   finally
     TInterceptMonitor.Leave;
