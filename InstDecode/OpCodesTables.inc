@@ -209,7 +209,7 @@ const
     (INST_ID_RET shl $08) or OPF_Iw, { 0xCA: RET Iw }
     (INST_ID_RET shl $08) or OPF_NONE, { 0xCB: RET  }
     (INST_ID_INT3 shl $08) or OPF_NONE, { 0xCC: INT3  }
-    (INST_ID_UNKNOWN shl $08) or OPF_Ib, { 0xCD: INT Ib }
+    (INST_ID_INT shl $08) or OPF_Ib, { 0xCD: INT Ib }
     (INST_ID_UNKNOWN shl $08) or OPF_I64, { 0xCE: INTO (i64) }
     (INST_ID_IRET shl $08) or OPF_NONE, { 0xCF: IRET  }
     (INST_ID_Grp2 shl $08) or OPF_MODRM or OPF_GRP, { 0xD0: Grp2 Eb,1 (1A) }
@@ -592,51 +592,51 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x45: vpsrlvd/vpsrlvq Vx,Hx,Wx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x46: vpsravd Vx,Hx,Wx (66),(v) |vpsravd/vpsravq Vx,Hx,Wx (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x47: vpsllvd/vpsllvq Vx,Hx,Wx (66),(v) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x48: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x49: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x4A: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x4B: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x48: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x49: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x4A: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x4B: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x4C: vrcp14ps/vrcp14pd Vpd,Wpd (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x4D: vrcp14ss/vrcp14sd Vsd,Hpd,Wsd (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x4E: vrsqrt14ps/vrsqrt14pd Vpd,Wpd (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x4F: vrsqrt14ss/vrsqrt14sd Vsd,Hsd,Wsd (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x50: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x51: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x52: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x53: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x54: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x55: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x56: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x57: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x50: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x51: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x52: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x53: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x54: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x55: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x56: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x57: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x58: vpbroadcastd Vx,Wx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x59: vpbroadcastq Vx,Wx (66),(v) |vbroadcasti32x2 Vx,Wx (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x5A: vbroadcasti128 Vqq,Mdq (66),(v) |vbroadcasti32x4/vbroadcasti64x2 Vx,Wx (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x5B: vbroadcasti32x8/vbroadcasti64x4 Vqq,Mdq (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5F: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x60: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x61: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x62: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x63: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x60: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x61: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x62: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x63: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x64: vpblendmd/vpblendmq Vx,Hx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x65: vblendmps/vblendmpd Vx,Hx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x66: vpblendmb/vpblendmw Vx,Hx,Wx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x67: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x68: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x69: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6A: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6B: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6F: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x70: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x71: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x72: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x73: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x74: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x67: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x68: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x69: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6A: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6B: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x70: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x71: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x72: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x73: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x74: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x75: vpermi2b/vpermi2w Vx,Hx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x76: vpermi2d/vpermi2q Vx,Hx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x77: vpermi2ps/vpermi2pd Vx,Hx,Wx (66),(ev) }
@@ -652,10 +652,10 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x81: INVPID Gy,Mdq (66) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x82: INVPCID Gy,Mdq (66) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x83: vpmultishiftqb Vx,Hx,Wx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x84: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x85: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x86: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x87: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x84: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x85: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x86: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x87: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x88: vexpandps/vexpandpd Vpd,Wpd (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x89: vpexpandd/vpexpandq Vx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x8A: vcompressps/vcompresspd Wx,Vx (66),(ev) }
@@ -663,7 +663,7 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x8C: vpmaskmovd/vpmaskmovq Vx,Hx,Mx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x8D: vpermb/vpermw Vx,Hx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x8E: vpmaskmovd/vpmaskmovq Mx,Vx,Hx (66),(v) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x8F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x8F: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x90: vgatherdd/vgatherdq Vx,Hx,Wx (66),(v) |vpgatherdd/vpgatherdq Vx,Wx (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x91: vgatherqd/vgatherqq Vx,Hx,Wx (66),(v) |vpgatherqd/vpgatherqq Vx,Wx (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x92: vgatherdps/vgatherdpd Vx,Hx,Wx (66),(v) }
@@ -684,8 +684,8 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xA1: vpscatterqd/vpscatterqq Wx,Vx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xA2: vscatterdps/vscatterdpd Wx,Vx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xA3: vscatterqps/vscatterqpd Wx,Vx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA5: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xA6: vfmaddsub213ps/vfmaddsub213pd Vx,Hx,Wx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xA7: vfmsubadd213ps/vfmsubadd213pd Vx,Hx,Wx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xA8: vfmadd213ps/vfmadd213pd Vx,Hx,Wx (66),(v) }
@@ -696,10 +696,10 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xAD: vfnmadd213ss/vfnmadd213sd Vx,Hx,Wx (66),(v),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xAE: vfnmsub213ps/vfnmsub213pd Vx,Hx,Wx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xAF: vfnmsub213ss/vfnmsub213sd Vx,Hx,Wx (66),(v),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB3: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xB4: vpmadd52luq Vx,Hx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xB5: vpmadd52huq Vx,Hx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xB6: vfmaddsub231ps/vfmaddsub231pd Vx,Hx,Wx (66),(v) }
@@ -712,12 +712,12 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xBD: vfnmadd231ss/vfnmadd231sd Vx,Hx,Wx (66),(v),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xBE: vfnmsub231ps/vfnmsub231pd Vx,Hx,Wx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xBF: vfnmsub231ss/vfnmsub231sd Vx,Hx,Wx (66),(v),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC3: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xC4: vpconflictd/vpconflictq Vx,Wx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC5: InvalidOpCode }
     (INST_ID_Grp18 shl $08) or OPF_MODRM or OPF_GRP, { 0xC6: Grp18 (1A) }
     (INST_ID_Grp19 shl $08) or OPF_MODRM or OPF_GRP, { 0xC7: Grp19 (1A) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xC8: sha1nexte Vdq,Wdq |vexp2ps/vexp2pd Vx,Wx (66),(ev) }
@@ -726,56 +726,56 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xCB: sha256rnds2 Vdq,Wdq |vrcp28ss/vrcp28sd Vx,Hx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xCC: sha256msg1 Vdq,Wdq |vrsqrt28ps/vrsqrt28pd Vx,Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xCD: sha256msg2 Vdq,Wdq |vrsqrt28ss/vrsqrt28sd Vx,Hx,Wx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xCE: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xCF: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD3: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD5: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD6: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD7: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xDA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xCE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xCF: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD6: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD7: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xDA: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xDB: VAESIMC Vdq,Wdq (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xDC: VAESENC Vdq,Hdq,Wdq (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xDD: VAESENCLAST Vdq,Hdq,Wdq (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xDE: VAESDEC Vdq,Hdq,Wdq (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xDF: VAESDECLAST Vdq,Hdq,Wdq (66),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE3: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE5: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE6: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE7: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEA: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEB: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEC: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xED: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEE: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEF: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE6: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE7: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEB: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEC: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xED: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEF: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xF0: MOVBE Gy,My |MOVBE Gw,Mw (66) |CRC32 Gd,Eb (F2) |CRC32 Gd,Eb (66&F2) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xF1: MOVBE My,Gy |MOVBE Mw,Gw (66) |CRC32 Gd,Ey (F2) |CRC32 Gd,Ew (66&F2) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xF2: ANDN Gy,By,Ey (v) }
     (INST_ID_Grp17 shl $08) or OPF_MODRM or OPF_GRP, { 0xF3: Grp17 (1A) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF4: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xF5: BZHI Gy,Ey,By (v) |PEXT Gy,By,Ey (F3),(v) |PDEP Gy,By,Ey (F2),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xF6: ADCX Gy,Ey (66) |ADOX Gy,Ey (F3) |MULX By,Gy,rDX,Ey (F2),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0xF7: BEXTR Gy,Ey,By (v) |SHLX Gy,Ey,By (66),(v) |SARX Gy,Ey,By (F3),(v) |SHRX Gy,Ey,By (F2),(v) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFA: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFB: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFC: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFD: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFE: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0xFF: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFB: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFC: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFD: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0xFF: InvalidOpCode });
 
   Table3A:array [$00 .. $FF] of Word = (//
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x00: vpermq Vqq,Wqq,Ib (66),(v) }
@@ -794,10 +794,10 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x0D: vblendpd Vx,Hx,Wx,Ib (66) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x0E: vpblendw Vx,Hx,Wx,Ib (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x0F: palignr Pq,Qq,Ib |vpalignr Vx,Hx,Wx,Ib (66),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x10: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x11: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x12: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x13: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x10: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x11: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x12: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x13: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x14: vpextrb Rd/Mb,Vdq,Ib (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x15: vpextrw Rd/Mw,Vdq,Ib (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x16: vpextrd/vpextrq Ey,Vdq,Ib (66),(v1) }
@@ -806,7 +806,7 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x19: vextractf128 Wdq,Vqq,Ib (66),(v) |vextractf32x4/vextractf64x2 Wdq,Vqq,Ib (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x1A: vinsertf32x8/vinsertf64x4 Vqq,Hqq,Wqq,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x1B: vextractf32x8/vextractf64x4 Wdq,Vqq,Ib (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x1C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x1C: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x1D: vcvtps2ph Wx,Vx,Ib (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x1E: vpcmpud/vpcmpuq Vk,Hd,Wd,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x1F: vpcmpd/vpcmpq Vk,Hd,Wd,Ib (66),(ev) }
@@ -814,32 +814,32 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x21: vinsertps Vdq,Hdq,Udq/Md,Ib (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x22: vpinsrd/vpinsrq Vdq,Hdq,Ey,Ib (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x23: vshuff32x4/vshuff64x2 Vx,Hx,Wx,Ib (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x24: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x24: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x25: vpternlogd/vpternlogq Vx,Hx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x26: vgetmantps/vgetmantpd Vx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x27: vgetmantss/vgetmantsd Vx,Hx,Wx,Ib (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x28: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x29: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x2A: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x2B: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x2C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x2D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x2E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x2F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x28: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x29: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x2A: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x2B: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x2C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x2D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x2E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x2F: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x30: kshiftrb/kshiftrw Vk,Uk,Ib (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x31: kshiftrd/kshiftrq Vk,Uk,Ib (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x32: kshiftlb/kshiftlw Vk,Uk,Ib (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x33: kshiftld/kshiftlq Vk,Uk,Ib (66),(v) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x34: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x35: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x36: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x37: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x34: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x35: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x36: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x37: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x38: vinserti128 Vqq,Hqq,Wqq,Ib (66),(v) |vinserti32x4/vinserti64x2 Vqq,Hqq,Wqq,Ib (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x39: vextracti128 Wdq,Vqq,Ib (66),(v) |vextracti32x4/vextracti64x2 Wdq,Vqq,Ib (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x3A: vinserti32x8/vinserti64x4 Vqq,Hqq,Wqq,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x3B: vextracti32x8/vextracti64x4 Wdq,Vqq,Ib (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x3C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x3D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x3C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x3D: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x3E: vpcmpub/vpcmpuw Vk,Hk,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x3F: vpcmpb/vpcmpw Vk,Hk,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x40: vdpps Vx,Hx,Wx,Ib (66) }
@@ -847,193 +847,193 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x42: vmpsadbw Vx,Hx,Wx,Ib (66),(v1) |vdbpsadbw Vx,Hx,Wx,Ib (66),(evo) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x43: vshufi32x4/vshufi64x2 Vx,Hx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x44: vpclmulqdq Vdq,Hdq,Wdq,Ib (66),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x45: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x45: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x46: vperm2i128 Vqq,Hqq,Wqq,Ib (66),(v) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x47: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x48: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x49: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x47: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x48: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x49: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x4A: vblendvps Vx,Hx,Wx,Lx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x4B: vblendvpd Vx,Hx,Wx,Lx (66),(v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x4C: vpblendvb Vx,Hx,Wx,Lx (66),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x4D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x4E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x4F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x4D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x4E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x4F: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x50: vrangeps/vrangepd Vx,Hx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x51: vrangess/vrangesd Vx,Hx,Wx,Ib (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x52: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x53: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x52: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x53: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x54: vfixupimmps/vfixupimmpd Vx,Hx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x55: vfixupimmss/vfixupimmsd Vx,Hx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x56: vreduceps/vreducepd Vx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x57: vreducess/vreducesd Vx,Hx,Wx,Ib (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x58: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x59: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5A: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5B: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x5F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x58: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x59: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5A: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5B: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x5F: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x60: vpcmpestrm Vdq,Wdq,Ib (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x61: vpcmpestri Vdq,Wdq,Ib (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x62: vpcmpistrm Vdq,Wdq,Ib (66),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x63: vpcmpistri Vdq,Wdq,Ib (66),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x64: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x65: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x64: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x65: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x66: vfpclassps/vfpclasspd Vk,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x67: vfpclassss/vfpclasssd Vk,Wx,Ib (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x68: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x69: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6A: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6B: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x6F: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x70: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x71: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x72: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x73: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x74: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x75: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x76: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x77: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x78: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x79: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x7A: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x7B: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x7C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x7D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x7E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x7F: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x80: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x81: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x82: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x83: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x84: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x85: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x86: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x87: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x88: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x89: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x8A: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x8B: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x8C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x8D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x8E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x8F: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x90: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x91: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x92: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x93: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x94: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x95: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x96: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x97: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x98: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x99: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x9A: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x9B: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x9C: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x9D: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x9E: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x9F: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA3: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA5: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA6: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA7: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xA9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xAA: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xAB: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xAC: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xAD: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xAE: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xAF: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB3: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB5: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB6: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB7: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xB9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xBA: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xBB: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xBC: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xBD: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xBE: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xBF: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC3: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC5: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC6: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC7: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xC9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xCA: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xCB: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x68: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x69: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6A: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6B: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x6F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x70: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x71: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x72: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x73: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x74: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x75: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x76: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x77: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x78: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x79: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x7A: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x7B: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x7C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x7D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x7E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x7F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x80: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x81: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x82: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x83: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x84: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x85: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x86: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x87: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x88: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x89: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x8A: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x8B: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x8C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x8D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x8E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x8F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x90: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x91: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x92: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x93: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x94: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x95: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x96: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x97: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x98: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x99: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x9A: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x9B: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x9C: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x9D: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x9E: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x9F: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA6: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA7: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xA9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xAA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xAB: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xAC: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xAD: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xAE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xAF: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB6: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB7: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xB9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xBA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xBB: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xBC: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xBD: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xBE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xBF: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC6: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC7: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xC9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xCA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xCB: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0xCC: sha1rnds4 Vdq,Wdq,Ib }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xCD: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xCE: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xCF: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD3: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD5: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD6: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD7: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xD9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xDA: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xDB: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xDC: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xDD: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xDE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xCD: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xCE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xCF: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD6: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD7: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xD9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xDA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xDB: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xDC: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xDD: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xDE: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0xDF: VAESKEYGEN Vdq,Wdq,Ib (66),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE0: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE3: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE5: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE6: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE7: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xE9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEA: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEB: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEC: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xED: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEE: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xEF: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE0: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE6: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE7: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xE9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEB: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEC: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xED: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xEF: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0xF0: RORX Gy,Ey,Ib (F2),(v) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF1: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF2: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF3: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF4: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF5: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF6: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF7: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF8: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xF9: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFA: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFB: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFC: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFD: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0xFE: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0xFF: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF1: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF2: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF3: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF4: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF5: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF6: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF7: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF8: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xF9: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFA: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFB: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFC: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFD: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0xFE: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0xFF: InvalidOpCode });
 
   Grp1:array [$00 .. $07] of Word = (//
     (INST_ID_ADD shl $08) or OPF_NONE, { 0x0: ADD  }
@@ -1047,13 +1047,13 @@ const
 
   Grp1A:array [$00 .. $07] of Word = (//
     (INST_ID_POP shl $08) or OPF_NONE, { 0x0: POP  }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp2:array [$00 .. $07] of Word = (//
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x0: ROL  }
@@ -1088,12 +1088,12 @@ const
   Grp4:array [$00 .. $07] of Word = (//
     (INST_ID_INC shl $08) or OPF_MODRM, { 0x0: INC Eb }
     (INST_ID_DEC shl $08) or OPF_MODRM, { 0x1: DEC Eb }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp5:array [$00 .. $07] of Word = (//
     (INST_ID_INC shl $08) or OPF_MODRM, { 0x0: INC Ev }
@@ -1112,8 +1112,8 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x3: LTR Ew }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x4: VERR Ew }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x5: VERW Ew }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp7:array [$00 .. $07] of Word = (//
     (INST_ID_UNKNOWN shl $08) or OPF_SPECIAL, { 0x0: SGDT Ms |VMCALL (001),(11B) |VMLAUNCH (010),(11B) |VMRESUME (011),(11B) |VMXOFF (100),(11B) }
@@ -1126,19 +1126,19 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_SPECIAL { 0x7: INVLPG Mb |SWAPGS (o64),(000),(11B) |RDTSCP (001),(11B) });
 
   Grp8:array [$00 .. $07] of Word = (//
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x4: BT  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x5: BTS  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x6: BTR  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE { 0x7: BTC  });
 
   Grp9:array [$00 .. $07] of Word = (//
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x1: CMPXCHG8B Mq/Mdq }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x3: xrstors  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x4: xsavec  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x5: xsaves  }
@@ -1146,62 +1146,62 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM { 0x7: VMPTRST Mq |VMPTRST Mq (F3) |RDSEED Rv (11B) });
 
   Grp10:array [$00 .. $07] of Word = (//
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp11A:array [$00 .. $07] of Word = (//
     (INST_ID_MOV shl $08) or OPF_MODRM or OPF_Ib, { 0x0: MOV Eb,Ib }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_Ib { 0x7: XABORT Ib (000),(11B) });
 
   Grp11B:array [$00 .. $07] of Word = (//
     (INST_ID_MOV shl $08) or OPF_MODRM or OPF_Iz, { 0x0: MOV Eb,Iz }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_Jz { 0x7: XBEGIN Jz (000),(11B) });
 
   Grp12:array [$00 .. $07] of Word = (//
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x2: psrlw Nq,Ib (11B) |vpsrlw Hx,Ux,Ib (66),(11B),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x4: psraw Nq,Ib (11B) |vpsraw Hx,Ux,Ib (66),(11B),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x6: psllw Nq,Ib (11B) |vpsllw Hx,Ux,Ib (66),(11B),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp13:array [$00 .. $07] of Word = (//
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x0: vprord/vprorq Hx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x1: vprold/vprolq Hx,Wx,Ib (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x2: psrld Nq,Ib (11B) |vpsrld Hx,Ux,Ib (66),(11B),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x4: psrad Nq,Ib (11B) |vpsrad Hx,Ux,Ib (66),(11B),(v1) |vpsrad/vpsraq Hx,Ux,Ib (66),(evo) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x6: pslld Nq,Ib (11B) |vpslld Hx,Ux,Ib (66),(11B),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp14:array [$00 .. $07] of Word = (//
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x01: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x2: psrlq Nq,Ib (11B) |vpsrlq Hx,Ux,Ib (66),(11B),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x3: vpsrldq Hx,Ux,Ib (66),(11B),(v1) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib, { 0x6: psllq Nq,Ib (11B) |vpsllq Hx,Ux,Ib (66),(11B),(v1) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM or OPF_Ib { 0x7: vpslldq Hx,Ux,Ib (66),(11B),(v1) });
 
@@ -1220,68 +1220,68 @@ const
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x1: prefetch T0 }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x2: prefetch T1 }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x3: prefetch T2 }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp17:array [$00 .. $07] of Word = (//
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x1: BLSR By,Ey (v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x2: BLSMSK By,Ey (v) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x3: BLSI By,Ey (v) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp18:array [$00 .. $07] of Word = (//
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x1: vgatherpf0dps/vgatherpf0dpd Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x2: vgatherpf1dps/vgatherpf1dpd Wx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x5: vscatterpf0dps/vscatterpf0dpd Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x6: vscatterpf1dps/vscatterpf1dpd Wx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   Grp19:array [$00 .. $07] of Word = (//
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x00: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x1: vgatherpf0qps/vgatherpf0qpd Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x2: vgatherpf1qps/vgatherpf1qpd Wx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x5: vscatterpf0qps/vscatterpf0qpd Wx (66),(ev) }
     (INST_ID_UNKNOWN shl $08) or OPF_MODRM, { 0x6: vscatterpf1qps/vscatterpf1qpd Wx (66),(ev) }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   GrpP:array [$00 .. $07] of Word = (//
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x0: PREFETCH  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x1: PREFETCHW  }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x02: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   GrpPDLK:array [$00 .. $07] of Word = (//
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x0: MONTMUL  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x1: XSHA1  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x2: XSHA2  }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x04: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x05: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
   GrpRNG:array [$00 .. $07] of Word = (//
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x0: xstore-rng  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x1: xcrypt-ecb  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x2: xcrypt-cbc  }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x03: InvalidOpCode }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x4: xcrypt-cfb  }
     (INST_ID_UNKNOWN shl $08) or OPF_NONE, { 0x5: xcrypt-ofb  }
-(INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
-(INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
+    (INST_ID_INVALID shl $08) or OPF_INVALID, {0x06: InvalidOpCode }
+    (INST_ID_INVALID shl $08) or OPF_INVALID {0x07: InvalidOpCode });
 
