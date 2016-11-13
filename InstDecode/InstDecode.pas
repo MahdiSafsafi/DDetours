@@ -4,6 +4,47 @@ interface
 
 // https://github.com/MahdiSafsafi/delphi-detours-library
 
+{ ===============================> CHANGE LOG <======================================================
+  ==> Version 3 (Nov 13,2016):
+  +Updated opcodes map.
+  +Added legacy instructions identifiers.
+  +Added address relative position to disp,imm,... fields.
+  +BugFix: fixed many bugs when opcode is two byte.
+  +BugFix: some instructions that use mandatory prefixes.
+  +BugFix: when decoding invalid opcode from group.
+  +BugFix: when decoding invalid FPU instructions.
+  +Improved FPU instructions decoding.
+  +Improved branch target calculation when offset is used.
+  +Improved ModRm decoding.
+  +Handled error when calculating branch target address.
+  +Removed mandatory prefixes check.
+  +Removed unnecessary fields.
+
+  ==> Dec 27,2014 , Mahdi Safsafi :
+  +BugFix : IN/INS/OUT/OUTS instructions decoding.
+  +BugFix : MOV with offset instructions decoding.
+
+  ==> Version 2 (Nov,22,2014):
+  +Updated opcodes map .
+  +Added support to three byte escape Table
+  +Added support to vex decoding (vex three & two byte).
+  +Added support to groups opcodes instructions.
+  +Added support to decode invalid opcode .
+  +Added support to 16-bits ModRm .
+  +Added support to handling errors.
+  +Added support for mandatory prefixes.
+  +Improve Decoding Process .=> Very faster than the old one !
+  +Reduce memory usage .
+  +Removing inused fields.
+  +Better support for REX prefix.
+  +Reduce OpCodesTable data size (the old : 8670 bytes => the new one : 1020 bytes !)
+  +BugFix : FPU instructions length.
+  +BugFix : Instructions that use two immediat .
+  +BugFix : Invalid instructions .
+  +BugFix : Invalid instructions for some mandatory prefixes.
+  +Many Bug Fix.
+}
+
 {$I Defs.inc}
 
 const
@@ -20,51 +61,52 @@ const
   INST_ID_IDIV = 9;
   INST_ID_IMUL = 10;
   INST_ID_INC = 11;
-  INST_ID_INT3 = 12;
-  INST_ID_IRET = 13;
-  INST_ID_JB = 14;
-  INST_ID_JBE = 15;
-  INST_ID_JL = 16;
-  INST_ID_JLE = 17;
-  INST_ID_JMP = 18;
-  INST_ID_JNB = 19;
-  INST_ID_JNBE = 20;
-  INST_ID_JNL = 21;
-  INST_ID_JNLE = 22;
-  INST_ID_JNO = 23;
-  INST_ID_JNP = 24;
-  INST_ID_JNS = 25;
-  INST_ID_JNZ = 26;
-  INST_ID_JO = 27;
-  INST_ID_JP = 28;
-  INST_ID_JS = 29;
-  INST_ID_JZ = 30;
-  INST_ID_LEA = 31;
-  INST_ID_LEAVE = 32;
-  INST_ID_LOOP = 33;
-  INST_ID_LOOPE = 34;
-  INST_ID_LOOPNE = 35;
-  INST_ID_MOV = 36;
-  INST_ID_MUL = 37;
-  INST_ID_NEG = 38;
-  INST_ID_NOP = 39;
-  INST_ID_NOT = 40;
-  INST_ID_OR = 41;
-  INST_ID_POP = 42;
-  INST_ID_POPA = 43;
-  INST_ID_POPF = 44;
-  INST_ID_PUSH = 45;
-  INST_ID_PUSHA = 46;
-  INST_ID_PUSHF = 47;
-  INST_ID_RET = 48;
-  INST_ID_SBB = 49;
-  INST_ID_SHL = 50;
-  INST_ID_SHR = 51;
-  INST_ID_SUB = 52;
-  INST_ID_TEST = 53;
-  INST_ID_XCHG = 54;
-  INST_ID_XOR = 55;
-  INST_ID_INVALID = 56;
+  INST_ID_INT = 12;
+  INST_ID_INT3 = 13;
+  INST_ID_IRET = 14;
+  INST_ID_JB = 15;
+  INST_ID_JBE = 16;
+  INST_ID_JL = 17;
+  INST_ID_JLE = 18;
+  INST_ID_JMP = 19;
+  INST_ID_JNB = 20;
+  INST_ID_JNBE = 21;
+  INST_ID_JNL = 22;
+  INST_ID_JNLE = 23;
+  INST_ID_JNO = 24;
+  INST_ID_JNP = 25;
+  INST_ID_JNS = 26;
+  INST_ID_JNZ = 27;
+  INST_ID_JO = 28;
+  INST_ID_JP = 29;
+  INST_ID_JS = 30;
+  INST_ID_JZ = 31;
+  INST_ID_LEA = 32;
+  INST_ID_LEAVE = 33;
+  INST_ID_LOOP = 34;
+  INST_ID_LOOPE = 35;
+  INST_ID_LOOPNE = 36;
+  INST_ID_MOV = 37;
+  INST_ID_MUL = 38;
+  INST_ID_NEG = 39;
+  INST_ID_NOP = 40;
+  INST_ID_NOT = 41;
+  INST_ID_OR = 42;
+  INST_ID_POP = 43;
+  INST_ID_POPA = 44;
+  INST_ID_POPF = 45;
+  INST_ID_PUSH = 46;
+  INST_ID_PUSHA = 47;
+  INST_ID_PUSHF = 48;
+  INST_ID_RET = 49;
+  INST_ID_SBB = 50;
+  INST_ID_SHL = 51;
+  INST_ID_SHR = 52;
+  INST_ID_SUB = 53;
+  INST_ID_TEST = 54;
+  INST_ID_XCHG = 55;
+  INST_ID_XOR = 56;
+  INST_ID_INVALID = 57;
   INST_ID_UNKNOWN = 0;
 
   { Groups ID }
@@ -681,7 +723,6 @@ begin
   end;
 end;
 
-
 procedure CalculateBranchTarget(PInst: PInstruction);
 var
   P: Pointer;
@@ -695,7 +736,7 @@ begin
       PInst^.Branch.Flags := BF_BRANCH or BF_REL or BF_JCC
     else
       PInst^.Branch.Flags := BF_BRANCH or BF_REL;
-     P := Pointer(IntPtr(PInst^.VirtualAddress) + PInst^.Offset.Value);
+    P := Pointer(IntPtr(PInst^.VirtualAddress) + PInst^.Offset.Value);
   end // Offset.
   else // Memory.
     if (PInst^.Displacement.Pos > 0) and (PInst^.ModRm.Flags and MF_DISP_ONLY <> $00) and ((PInst^.InstId = INST_ID_JMP) or (PInst^.InstId = INST_ID_CALL)) then
@@ -722,7 +763,6 @@ begin
     end;
   PInst^.Branch.Target := P;
 end;
-
 
 function DecodeInst(PInst: PInstruction): ShortInt;
 var
@@ -800,6 +840,8 @@ begin
       begin
         { Groups }
         GrpFlags := DecodeGroup(PInst, PInst^.InstId);
+        if PInst^.InstId = INST_ID_INVALID then
+          Break;
         if GrpFlags <> OPF_NONE then
           Flags := GrpFlags; // Inherits from group.
       end;
