@@ -1,5 +1,11 @@
-{$IFNDEF FPC}  
-  {$IF CompilerVersion >=22}
-    {$DEFINE DELPHI_XE_UP }
-  {$IFEND}
+{$IFNDEF FPC}
+	{$IF CompilerVersion >= 22}
+		{$DEFINE DELPHI_XE_UP }
+	{$IFEND}
+{$ELSE FPC}
+	{$IF DEFINED (CPU32)}
+		{$DEFINE CPUX86}
+	{$ELSEIF DEFINED (CPU64)}
+		{$DEFINE CPUX64}
+	{$IFEND}
 {$ENDIF !FPC}
