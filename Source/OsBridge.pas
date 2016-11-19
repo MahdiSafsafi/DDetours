@@ -24,6 +24,29 @@ uses
   Classes,
   RtlBridge;
 
+const
+  { Memory Protection }
+  {
+    For all platforms, memory protection could be
+    ONLY one of the following constants !
+    => This allows compatibility with Windows.
+  }
+{$IFDEF POSIX}
+  VMP_READ = PROT_READ;
+  VMP_WRITE = PROT_WRITE;
+  VMP_EXECUTE = PROT_EXEC;
+  VMP_READ_WRITE = VMP_READ or VMP_WRITE;
+  VMP_EXECUTE_READ = VMP_EXECUTE or VMP_READ;
+  VMP_EXECUTE_READ_WRITE = VMP_EXECUTE_READ or VMP_WRITE;
+{$ELSE IF DEFINED(MSWINDOWS) }
+  VMP_READ = PAGE_READONLY;
+  VMP_WRITE = PAGE_READWRITE;
+  VMP_EXECUTE = PAGE_EXECUTE;
+  VMP_READ_WRITE = VMP_WRITE;
+  VMP_EXECUTE_READ = PAGE_EXECUTE_READ;
+  VMP_EXECUTE_READ_WRITE = PAGE_EXECUTE_READWRITE;
+{$ENDIF POSIX}
+
 type
   TSystemInfo = record
     PageSize: SIZE_T;
@@ -33,9 +56,18 @@ type
 
   PSystemInfo = ^TSystemInfo;
 
+  TMemoryInfo = record
+    StartAddress: Pointer;
+    Size: NativeUInt; // Size of region.
+    Protection: Cardinal; // One of VMP_XX
+  end;
+
+  PMemoryInfo = ^TMemoryInfo;
+
   { Functions }
 function GetCurrentThreadId: TThreadID;
 procedure QuerySystemInfo(var SystemInfo: TSystemInfo);
+function QueryMemoryInfo(Address: Pointer; var Info: TMemoryInfo): Boolean;
 
 implementation
 
@@ -69,7 +101,7 @@ begin
   Regx := TRegExpression.Create('^cpu\d+$');
   DirList := TStringList.Create;
   try
-    FindAllDirectories(UNIX_SYS_CPU, DirList,False);
+    FindAllDirectories(UNIX_SYS_CPU, DirList, False);
     for I := 0 to DirList.Count - 1 do
     begin
       sCPU := ExtractFileName(DirList[I]);
@@ -110,6 +142,84 @@ begin
   finally
     CloseFile(F);
     Regx.Free;
+  end;
+end;
+
+function QueryMemoryInfo(Address: Pointer; var Info: TMemoryInfo): Boolean;
+var
+  F: TextFile;
+  FileName: String;
+  Line: String;
+  Regx: TRegExpression;
+  pStart: NativeUInt;
+  pEnd: NativeUInt;
+  LAddress: NativeUInt;
+  S: String;
+  Protection: Cardinal;
+begin
+  Result := False;
+  if not Assigned(Address) then
+    Exit;
+  Protection := 0;
+  LAddress := NativeUInt(Address);
+  Regx := TRegExpression.Create('\s*([0-9a-f]+)-([0-9a-f]+)\s+(.+?)\s(.+?)\s(.+?)\s(.+?)\s+(.*)');
+  try
+    FileName := Format('/proc/%d/maps', [GetProcessID]);
+    AssignFile(F, FileName);
+    Reset(F);
+    try
+      while not EOF(F) do
+      begin
+        ReadLn(F, Line);
+        if Regx.Exec(Line) then
+        begin
+{$IFDEF CPU64BITS}
+          pStart := StrToInt64('$' + Regx.Match[1]);
+          pEnd := StrToInt64('$' + Regx.Match[2]);
+{$ELSE !CPU64BITS}
+          pStart := StrToInt('$' + Regx.Match[1]);
+          pEnd := StrToInt('$' + Regx.Match[2]);
+{$ENDIF CPU64BITS}
+          Result := (LAddress >= pStart) and (LAddress < pEnd);
+          if Result then
+          begin
+            Info.StartAddress := Pointer(pStart);
+            Info.Size := pEnd - pStart;
+            S := Regx.Match[3];
+            if Pos('r', S) > 0 then
+              Protection := PROT_READ;
+            if Pos('w', S) > 0 then
+              Protection := Protection or PROT_WRITE;
+            if Pos('x', S) > 0 then
+              Protection := Protection or PROT_EXEC;
+            Info.Protection := Protection;
+            Break;
+          end;
+        end;
+      end;
+    finally
+      CloseFile(F);
+    end;
+  finally
+    Regx.Free;
+  end;
+end;
+
+{$ELSE IF DEFINED (MSWINDOWS)}
+
+function QueryMemoryInfo(Address: Pointer; var Info: TMemoryInfo): Boolean;
+var
+  mbi: TMemoryBasicInformation;
+begin
+  Result := False;
+  if not Assigned(Address) then
+    Exit;
+  Result := VirtualQuery(Address, mbi, SizeOf(mbi)) > 0;
+  if Result then
+  begin
+    Info.StartAddress := mbi.BaseAddress;
+    Info.Size := mbi.RegionSize;
+    Info.Protection := mbi.Protect;
   end;
 end;
 
