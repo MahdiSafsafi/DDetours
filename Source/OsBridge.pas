@@ -67,15 +67,27 @@ type
   { Functions }
 function GetCurrentThreadId: TThreadID;
 procedure QuerySystemInfo(var SystemInfo: TSystemInfo);
-function QueryMemoryInfo(Address: Pointer; var Info: TMemoryInfo): Boolean;
+function QueryMemoryInfo(const Address: Pointer; var Info: TMemoryInfo): Boolean;
+function SetMemoryPermission(const Address: Pointer; Size: SIZE_T; Permission: Cardinal; OldPermission: PCardinal): Boolean;
 
 implementation
+
+const
+  SFeatureRequired = 'Feature required but not implemented.';
 
 {$IF DEFINED (MSWINDOWS)}
 {$I Win32Api.inc}
 {$ELSE IF DEFINED (POSIX)}
 {$I POSIXApi.inc}
 {$ENDIF}
+
+var
+  SysInfo: TSystemInfo;
+
+procedure Error(const SError: string);
+begin
+  raise Exception.Create(SError);
+end;
 
 function GetCurrentThreadId: TThreadID;
 begin
@@ -97,6 +109,9 @@ var
   I: Integer;
   sCPU: String;
 begin
+  { Number Of Processors = number of folders
+    that their name are in this form "cpuX"
+    where X is a digit representing a processor }
   Result := 0;
   Regx := TRegExpression.Create('^cpu\d+$');
   DirList := TStringList.Create;
@@ -126,6 +141,10 @@ var
   Id: Integer;
 begin
   Result := 0;
+  { Parse "/proc/cpuinfo" file.
+    NB:cpuinfo contains ONLY on-line processors. }
+  { Use "sysconf(_SC_NPROCESSORS_ONLN)"
+    for UNIX versions that implement sysconf function. }
   Regx := TRegExpression.Create('processor\s+:\s+(\d+)');
   AssignFile(F, UNIX_CPUINFO);
   try
@@ -145,7 +164,7 @@ begin
   end;
 end;
 
-function QueryMemoryInfo(Address: Pointer; var Info: TMemoryInfo): Boolean;
+function QueryMemoryInfo(const Address: Pointer; var Info: TMemoryInfo): Boolean;
 var
   F: TextFile;
   FileName: String;
@@ -157,9 +176,9 @@ var
   S: String;
   Protection: Cardinal;
 begin
+  { The only way to query memory info is to parse the
+    "/proc/pid/maps" file. }
   Result := False;
-  if not Assigned(Address) then
-    Exit;
   Protection := 0;
   LAddress := NativeUInt(Address);
   Regx := TRegExpression.Create('\s*([0-9a-f]+)-([0-9a-f]+)\s+(.+?)\s(.+?)\s(.+?)\s(.+?)\s+(.*)');
@@ -207,13 +226,10 @@ end;
 
 {$ELSE IF DEFINED (MSWINDOWS)}
 
-function QueryMemoryInfo(Address: Pointer; var Info: TMemoryInfo): Boolean;
+function QueryMemoryInfo(const Address: Pointer; var Info: TMemoryInfo): Boolean;
 var
   mbi: TMemoryBasicInformation;
 begin
-  Result := False;
-  if not Assigned(Address) then
-    Exit;
   Result := VirtualQuery(Address, mbi, SizeOf(mbi)) > 0;
   if Result then
   begin
@@ -224,6 +240,47 @@ begin
 end;
 
 {$ENDIF POSIX}
+
+function FlushInsCache(const lpBaseAddress: Pointer; dwSize: SIZE_T): Boolean;
+begin
+{$IF NOT DEFINED(CPUX32) AND NOT DEFINED (CPUX64)}
+  { No need to update instruction cache if CPU is x86. }
+{$IFDEF MSWINDOWS}
+  Result := FlushInstructionCache(GetCurrentProcess, lpBaseAddress, dwSize);
+{$ELSE !MSWINDOWS}
+  Error(SFeatureRequired);
+{$ENDIF MSWINDOWS}
+{$ELSE}// x86
+  Result := True;
+{$ENDIF}
+end;
+
+function SetMemoryPermission(const Address: Pointer; Size: SIZE_T; Permission: Cardinal; OldPermission: PCardinal): Boolean;
+var
+{$IFDEF POSIX}
+  Info: TMemoryInfo;
+  PageSize: SIZE_T;
+{$ENDIF POSIX}
+  P: Pointer;
+begin
+  P := Address;
+{$IFDEF MSWINDOWS}
+  Result := VirtualProtect(P, Size, Permission, OldPermission);
+{$ELSE IF DEFINED (POSIX)}
+  if Assigned(OldPermission) and QueryMemoryInfo(P, Info) then
+  begin
+    OldPermission^ := Info.Protection; // Old Permission.
+  end;
+  PageSize := SysInfo.PageSize;
+  P := Pointer(NativeUInt(P) and not(PageSize - 1)); // Address must be aligned to a page boundary !
+  Result := mprotect(P, Size, Permission) = 0;
+{$ENDIF MSWINDOWS}
+  case Permission of
+    VMP_EXECUTE, //
+      VMP_EXECUTE_READ, //
+      VMP_EXECUTE_READ_WRITE: FlushInsCache(P, Size);
+  end;
+end;
 
 procedure QuerySystemInfo(var SystemInfo: TSystemInfo);
 {$IFDEF MSWINDOWS}
@@ -242,5 +299,9 @@ begin
   SystemInfo.ActiveProcessorMask := LInfo.dwActiveProcessorMask;
 {$ENDIF}
 end;
+
+initialization
+
+QuerySystemInfo(SysInfo);
 
 end.
