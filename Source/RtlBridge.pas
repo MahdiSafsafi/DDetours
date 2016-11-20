@@ -3,11 +3,14 @@ unit RtlBridge;
 // https://github.com/MahdiSafsafi/delphi-detours-library
 
 {
-  Runtime bridge between compilers.
+  Runtime bridge between FPC and Delphi compiler.
   This allows cross compiling under Delphi and FPC.
 }
 
 {$I Defs.inc}
+{$IFDEF DELPHI_XE4_UP}
+{$LEGACYIFEND ON}
+{$ENDIF DELPHI_XE4_UP}
 
 interface
 
@@ -18,12 +21,14 @@ uses
 {$IFDEF FPC}
   RegExpr,
   FileUtil,
-  LazFileUtils
+  LazFileUtils,
 {$ELSE !FPC}    // Delphi
-    IOUtils,
-  RegularExpressions
+{$IFDEF DELPHI_2010_UP}
+  IOUtils,
+  RegularExpressions,
+{$ENDIF DELPHI_2010_UP}
 {$ENDIF FPC}
-    ;
+  CommonTypes;
 
 type
   TLock = record
@@ -40,6 +45,7 @@ type
 
   TRegExpression = TRegExpr;
 {$ELSE !FPC}
+{$IFDEF DELPHI_2010_UP}
 
   TRegExpression = class(TObject)
   private
@@ -52,6 +58,7 @@ type
     function Exec(const InputString: string): Boolean;
     property Match[Index: Integer]: string read GetMatch;
   end;
+{$ENDIF DELPHI_2010_UP}
 {$ENDIF FPC}
 
 procedure FindAllDirectories(const Path: string; AList: TStringList; WalkSubDirectories: Boolean);
@@ -68,7 +75,7 @@ implementation
 {$ENDIF FPC}
 {$IFDEF UseSimpleLock}
 
-function BoolCmpExchange(Address: Pointer; CompareValue, NewValue: Boolean): Boolean; assembler;
+function BoolCmpExchange(Address: Pointer; CompareValue, NewValue: Boolean): Boolean;{$IFDEF FPC} assembler; {$ENDIF FPC}
 asm
   {$IFDEF CPUX32}
   { eax = Address
@@ -95,10 +102,10 @@ begin
   InitCriticalSection(LockStruct.Criticalsection);
 {$ELSEIF DEFINED(MSWINDOWS)}
   InitializeCriticalSection(LockStruct.Criticalsection);
-{$ENDIF FPC}
+{$IFEND FPC}
 {$ELSEIF DEFINED (UseSimpleLock)}
   LockStruct.LockValue := 0;
-{$ENDIF}
+{$IFEND UseMonitor}
 end;
 
 procedure FinalizeLock(var LockStruct: TLock);
@@ -110,10 +117,10 @@ begin
   DoneCriticalSection(LockStruct.Criticalsection);
 {$ELSEIF DEFINED (MSWINDOWS)}
   DeleteCriticalSection(LockStruct.Criticalsection);
-{$ENDIF FPC}
+{$IFEND FPC}
 {$ELSEIF DEFINED (UseSimpleLock)}
   LockStruct.LockValue := 0;
-{$ENDIF}
+{$IFEND UseMonitor}
 end;
 
 procedure Lock(var LockStruct: TLock);
@@ -131,7 +138,7 @@ begin
   Windows.EnterCriticalsection(LockStruct.Criticalsection);
 {$ELSE}
   Error();
-{$ENDIF FPC}
+{$IFEND FPC}
 {$ELSEIF DEFINED (UseSimpleLock)}
   if IsMultiThread then
   begin
@@ -142,7 +149,7 @@ begin
   end;
 {$ELSE}
   Error();
-{$ENDIF}
+{$IFEND UseMonitor}
 end;
 
 procedure Unlock(var LockStruct: TLock);
@@ -154,22 +161,22 @@ begin
   System.LeaveCriticalSection(LockStruct.Criticalsection);
 {$ELSEIF DEFINED(MSWINDOWS)}
   Windows.LeaveCriticalSection(LockStruct.Criticalsection);
-{$ENDIF FPC}
+{$IFEND FPC}
 {$ELSEIF DEFINED (UseSimpleLock)}
   LockStruct.LockValue := 0;
-{$ENDIF}
+{$IFEND UseMonitor}
 end;
 
 procedure FindAllDirectories(const Path: string; AList: TStringList; WalkSubDirectories: Boolean);
-{$IFNDEF FPC}
+{$IF NOT DEFINED (FPC) AND DEFINED (DELPHI_2010_UP)}
 var
   LArray: TStringDynArray;
   i: Integer;
   Dir: string;
   Option: TSearchOption;
-{$ENDIF !FPC}
+{$IFEND}
 begin
-{$IFNDEF FPC}
+{$IF DEFINED (DELPHI_2010_UP)}
   if WalkSubDirectories then
     Option := TSearchOption.soAllDirectories
   else
@@ -186,11 +193,14 @@ begin
     Dir := LArray[i];
     AList.Add(Dir);
   end;
-{$ELSE FPC}
-{$ENDIF !FPC}
+{$ELSEIF DEFINED (FPC)}
+  FileUtil.FindAllDirectories(AList, Path, WalkSubDirectories);
+{$ELSE}
+  //Error;
+{$IFEND}
 end;
 
-{$IFNDEF FPC}
+{$IFDEF DELPHI_2010_UP}
 { TRegExpression }
 
 constructor TRegExpression.Create(const Expression: string);
@@ -213,6 +223,6 @@ function TRegExpression.GetMatch(Index: Integer): string;
 begin
   Result := FMatch.Groups[Index].Value;
 end;
-{$ENDIF !FPC}
+{$ENDIF DELPHI_2010_UP}
 
 end.

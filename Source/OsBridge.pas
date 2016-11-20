@@ -9,6 +9,9 @@ unit OsBridge;
 }
 
 {$I Defs.inc}
+{$IFDEF DELPHI_XE4_UP}
+	{$LEGACYIFEND ON}
+{$ENDIF DELPHI_XE4_UP}
 
 interface
 
@@ -19,10 +22,11 @@ uses
 {$ELSE IF DEFINED(POSIX)}
   BaseUnix,
   pthreads,
-{$ENDIF}
+{$IFEND}
   SysUtils,
   Classes,
-  RtlBridge;
+  RtlBridge,
+  CommonTypes;
 
 const
   { Memory Protection }
@@ -51,6 +55,7 @@ const
   VMF_64BITS = 2;
 
 type
+
   TSystemInfo = record
     PageSize: SIZE_T;
     NumberOfProcessors: Cardinal;
@@ -66,9 +71,6 @@ type
   end;
 
   PMemoryInfo = ^TMemoryInfo;
-
-  TThreadPriority = LongInt;
-  TThreadPolicy = LongInt;
 
   { Functions }
 function GetCurrentThreadId: TThreadID;
@@ -89,7 +91,7 @@ const
 {$I Win32Api.inc}
 {$ELSE IF DEFINED (POSIX)}
 {$I POSIXApi.inc}
-{$ENDIF}
+{$IFEND}
 
 var
   SysInfo: TSystemInfo;
@@ -105,7 +107,7 @@ begin
   Result := pthread_self();
 {$ELSE IF DEFINED (MSWINDOWS)}// Windows
   Result := Windows.GetCurrentThreadId();
-{$ENDIF}
+{$IFEND}
 end;
 
 {$IFDEF POSIX}
@@ -266,7 +268,7 @@ begin
 {$ENDIF MSWINDOWS}
 {$ELSE}// x86
   Result := True;
-{$ENDIF}
+{$IFEND}
 end;
 
 function SetMemoryPermission(const Address: Pointer; Size: SIZE_T; Permission: Cardinal; OldPermission: PCardinal): Boolean;
@@ -311,7 +313,7 @@ begin
   SystemInfo.PageSize := LInfo.dwPageSize;
   SystemInfo.NumberOfProcessors := LInfo.dwNumberOfProcessors;
   SystemInfo.ActiveProcessorMask := LInfo.dwActiveProcessorMask;
-{$ENDIF}
+{$IFEND}
 end;
 
 function GetThreadPriority(ThreadId: TThreadID; ThreadHandle: THandle; var Policy: TThreadPolicy; var Priority: TThreadPriority): Boolean;
