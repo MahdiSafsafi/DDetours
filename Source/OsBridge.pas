@@ -38,6 +38,7 @@ const
   VMP_READ_WRITE = VMP_READ or VMP_WRITE;
   VMP_EXECUTE_READ = VMP_EXECUTE or VMP_READ;
   VMP_EXECUTE_READ_WRITE = VMP_EXECUTE_READ or VMP_WRITE;
+  MAP_32BIT = $40;
 {$ELSE IF DEFINED(MSWINDOWS) }
   VMP_READ = PAGE_READONLY;
   VMP_WRITE = PAGE_READWRITE;
@@ -46,6 +47,8 @@ const
   VMP_EXECUTE_READ = PAGE_EXECUTE_READ;
   VMP_EXECUTE_READ_WRITE = PAGE_EXECUTE_READWRITE;
 {$ENDIF POSIX}
+  VMF_32BITS = 1;
+  VMF_64BITS = 2;
 
 type
   TSystemInfo = record
@@ -71,6 +74,8 @@ type
 function GetCurrentThreadId: TThreadID;
 procedure QuerySystemInfo(var SystemInfo: TSystemInfo);
 function QueryMemoryInfo(const Address: Pointer; var Info: TMemoryInfo): Boolean;
+function VirtualAllocMemory(Address: Pointer; Size: SIZE_T; Permission: Cardinal; Flags: Cardinal): Pointer;
+function VirtualFreeMemory(const Address: Pointer; Size: SIZE_T): Boolean;
 function SetMemoryPermission(const Address: Pointer; Size: SIZE_T; Permission: Cardinal; OldPermission: PCardinal): Boolean;
 function GetThreadPriority(ThreadId: TThreadID; ThreadHandle: THandle; var Policy: TThreadPolicy; var Priority: TThreadPriority): Boolean;
 function SetThreadPriority(ThreadId: TThreadID; ThreadHandle: THandle; Policy: TThreadPolicy; Priority: TThreadPriority): Boolean;
@@ -336,6 +341,35 @@ begin
 {$ELSE IF DEFINED (Windows)}// Windows
   Result := Windows.SetThreadPriority(ThreadHandle, Priority);
 {$ENDIF POSIX}
+end;
+
+function VirtualAllocMemory(Address: Pointer; Size: SIZE_T; Permission: Cardinal; Flags: Cardinal): Pointer;
+var
+  F: Cardinal;
+begin
+  F := 0;
+{$IFDEF MSWINDOWS}
+{$IFDEF CPU64BITS}
+  if Flags and VMF_64BITS <> 0 then
+    F := MEM_TOP_DOWN;
+{$ENDIF CPU64BITS}
+  Result := VirtualAlloc(Address, Size, MEM_RESERVE or MEM_COMMIT or F, Permission);
+{$ELSE !MSWINDOWS}
+{$IFDEF CPU64BITS}
+  if Flags and VMF_32BITS <> 0 then
+    F := MAP_32BIT;
+{$ENDIF CPU64BITS}
+  Result := mmap(Address, Size, Permission, MAP_PRIVATE or MAP_ANONYMOUS or F, -1, 0);
+{$ENDIF MSWINDOWS}
+end;
+
+function VirtualFreeMemory(const Address: Pointer; Size: SIZE_T): Boolean;
+begin
+{$IFDEF MSWINDOWS}
+  Result := VirtualFree(Address, Size, MEM_RELEASE);
+{$ELSE !MSWINDOWS}
+  Result := munmap(Address, Size) = 0;
+{$ENDIF MSWINDOWS}
 end;
 
 initialization
