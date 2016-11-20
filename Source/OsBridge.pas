@@ -64,11 +64,16 @@ type
 
   PMemoryInfo = ^TMemoryInfo;
 
+  TThreadPriority = LongInt;
+  TThreadPolicy = LongInt;
+
   { Functions }
 function GetCurrentThreadId: TThreadID;
 procedure QuerySystemInfo(var SystemInfo: TSystemInfo);
 function QueryMemoryInfo(const Address: Pointer; var Info: TMemoryInfo): Boolean;
 function SetMemoryPermission(const Address: Pointer; Size: SIZE_T; Permission: Cardinal; OldPermission: PCardinal): Boolean;
+function GetThreadPriority(ThreadId: TThreadID; ThreadHandle: THandle; var Policy: TThreadPolicy; var Priority: TThreadPriority): Boolean;
+function SetThreadPriority(ThreadId: TThreadID; ThreadHandle: THandle; Policy: TThreadPolicy; Priority: TThreadPriority): Boolean;
 
 implementation
 
@@ -99,6 +104,7 @@ begin
 end;
 
 {$IFDEF POSIX}
+{$IFDEF LINUX}
 
 function GetNumberOfProcessors: Integer;
 const
@@ -224,6 +230,9 @@ begin
   end;
 end;
 
+{$ELSE !LINUX}
+Error(SFeatureRequired);
+{$ENDIF LINUX}
 {$ELSE IF DEFINED (MSWINDOWS)}
 
 function QueryMemoryInfo(const Address: Pointer; var Info: TMemoryInfo): Boolean;
@@ -298,6 +307,35 @@ begin
   SystemInfo.NumberOfProcessors := LInfo.dwNumberOfProcessors;
   SystemInfo.ActiveProcessorMask := LInfo.dwActiveProcessorMask;
 {$ENDIF}
+end;
+
+function GetThreadPriority(ThreadId: TThreadID; ThreadHandle: THandle; var Policy: TThreadPolicy; var Priority: TThreadPriority): Boolean;
+{$IFDEF POSIX}
+var
+  Param: TSchedParam;
+{$ENDIF POSIX}
+begin
+{$IFDEF MSWINDOWS}
+  Priority := Windows.GetThreadPriority(ThreadHandle);
+  Result := Priority <> THREAD_PRIORITY_ERROR_RETURN;
+{$ELSE IF DEFINED (POSIX)}
+  Result := pthread_getschedparam(ThreadId, @Policy, @Param) = 0;
+  Priority := Param.sched_priority;
+{$ENDIF MSWINDOWS}
+end;
+
+function SetThreadPriority(ThreadId: TThreadID; ThreadHandle: THandle; Policy: TThreadPolicy; Priority: TThreadPriority): Boolean;
+{$IFDEF POSIX}
+var
+  Param: TSchedParam;
+{$ENDIF POSIX}
+begin
+{$IFDEF POSIX}
+  Param.sched_priority := Priority;
+  Result := pthread_setschedparam(ThreadId, Policy, @Param) = 0;
+{$ELSE IF DEFINED (Windows)}// Windows
+  Result := Windows.SetThreadPriority(ThreadHandle, Priority);
+{$ENDIF POSIX}
 end;
 
 initialization
