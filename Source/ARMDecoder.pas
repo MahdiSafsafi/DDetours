@@ -205,7 +205,7 @@ var
   ShiftMethod: ShortInt;
 begin
   W := Ins.FullOpCode;
-  Ins.Shift.Rm := GetRn(W);
+  Ins.Shift.Rm := GetRm(W);
   ShiftMethod := (W and $70) shr 4;
   case ShiftMethod of
     0:
