@@ -2239,7 +2239,12 @@ begin
   begin
     P := GetRoot(TargetProc);
     PDscr := CreateNewDescriptor;
-    InsertDescriptor(P, PDscr);
+    try
+      InsertDescriptor(P, PDscr);
+    except
+      FreeMem(PDscr);
+      raise;
+    end;
   end;
   Result := AddHook(PDscr, InterceptProc);
 end;
