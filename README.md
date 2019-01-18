@@ -1,3 +1,7 @@
+![Version](https://img.shields.io/badge/version-v2-yellow.svg)
+![License](https://img.shields.io/github/license/MahdiSafsafi/DebugEngine.svg)
+![Lang](https://img.shields.io/github/languages/top/MahdiSafsafi/DDetours.svg)
+
 The **Delphi Detours Library** is a library allowing you to hook Delphi and Windows API functions. It provides an easy way to insert and remove hook.
 
 ## What's new in Version 2: ##
