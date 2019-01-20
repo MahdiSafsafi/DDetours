@@ -1,7 +1,7 @@
 // **************************************************************************************************
 // Part of Delphi Instruction Decode Library [InstDecode]
 // 
-// https://github.com/MahdiSafsafi/delphi-detours-library
+// https://github.com/MahdiSafsafi/DDetours
 
 // The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License");
 // you may not use this file except in compliance with the License. You may obtain a copy of the
@@ -14,7 +14,7 @@
 // The Original Code is ModRmFlagsTables.inc.
 //
 // The Initial Developer of the Original Code is Mahdi Safsafi [SMP3].
-// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2016 Mahdi Safsafi .
+// Portions created by Mahdi Safsafi . are Copyright (C) 2013-2019 Mahdi Safsafi .
 // All Rights Reserved.
 //
 // **************************************************************************************************

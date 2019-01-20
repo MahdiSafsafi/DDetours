@@ -15,7 +15,7 @@ Please check [Version2](https://github.com/MahdiSafsafi/delphi-detours-library/b
   * Support COM **vtable** patching.
   * Fully <u><b>thread-safe</b></u> code hooking and unhooking.
   * Support hooking Object Method.
-  * Support Delphi 7/2005-2010/XE-XE8.
+  * Support Delphi 7/2005-2010/XE-Rio(Delphi 10.3).
   * Support Lazarus/FPC.
   * 64 bit address is supported.
   * The library does not use any external library.
