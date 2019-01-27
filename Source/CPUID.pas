@@ -139,10 +139,17 @@ asm
   MOV RAX,RCX
   MOV R9,RDX
   CPUID
+  {$IFNDEF FPC}
   MOV R9.TCPUIDStruct.rEAX,EAX
   MOV R9.TCPUIDStruct.rEBX,EBX
   MOV R9.TCPUIDStruct.rECX,ECX
   MOV R9.TCPUIDStruct.rEDX,EDX
+  {$ELSE FPC}
+  MOV [R9].TCPUIDStruct.rEAX,EAX
+  MOV [R9].TCPUIDStruct.rEBX,EBX
+  MOV [R9].TCPUIDStruct.rECX,ECX
+  MOV [R9].TCPUIDStruct.rEDX,EDX
+  {$ENDIF !FPC}
   POP RDX
   POP RBX
   POP R9
@@ -160,7 +167,7 @@ asm
   2) Detect CPUID.1:ECX.AVX[bit 28] = 1
   => AVX instructions supported.
 
-  3) Issue XGETBV and verify that XCR0[2:1] = ‘11b’
+  3) Issue XGETBV and verify that XCR0[2:1] = â€˜11bâ€™
   => XMM state and YMM state are enabled by OS.
 
    }
