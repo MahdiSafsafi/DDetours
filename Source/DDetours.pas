@@ -8,6 +8,10 @@
 // with this file, You can obtain one at
 // https://mozilla.org/MPL/2.0/.
 // **************************************************************************************************
+//
+// Contributors:
+// - David Millington : Added TDetours<T> class.
+// **************************************************************************************************
 
 unit DDetours;
 
@@ -128,7 +132,10 @@ type
     property CreatorThreadId: TThreadId read GetCreatorThreadId;
     property InterceptOptions: TInterceptOptions read GetInterceptOptions;
   end;
-
+  
+  {
+	Based on David Millington's original implementation TDetours<T>.
+  }
   TIntercept<T, U> = class(TInterfacedObject, IIntercept<T, U>)
   private
     FNextHook: T;
