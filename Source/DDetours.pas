@@ -3,8 +3,8 @@
 // Unit DDetours
 // https://github.com/MahdiSafsafi/DDetours
 //
-// This Source Code Form is subject to the terms of the Mozilla 
-// Public License, v. 2.0. If a copy of the MPL was not distributed 
+// This Source Code Form is subject to the terms of the Mozilla
+// Public License, v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at
 // https://mozilla.org/MPL/2.0/.
 // **************************************************************************************************
@@ -132,9 +132,9 @@ type
     property CreatorThreadId: TThreadId read GetCreatorThreadId;
     property InterceptOptions: TInterceptOptions read GetInterceptOptions;
   end;
-  
+
   {
-	Based on David Millington's original implementation TDetours<T>.
+    Based on David Millington's original implementation TDetours<T>.
   }
   TIntercept<T, U> = class(TInterfacedObject, IIntercept<T, U>)
   private
@@ -234,7 +234,7 @@ const
   SErrorInvalidTrampoline = 'Invalid TrampoLine Pointer.';
   SErrorBeginUnHook = 'BeginUnHooks must be called outside BeginHooks/EndHooks.';
   SErrorRecursiveSectionUnsupported = 'Trampoline was not marked to use recursive section.';
-
+  SErrorTlsOutOfIndexes = 'Tls out of indexes.';
   { JMP Type }
   JT_NONE = 0;
   JT_REL8 = 1;
@@ -2095,6 +2095,7 @@ function AddHook(PDscr: PDescriptor; InterceptProc: PByte; Param: Pointer; Optio
 var
   n: ShortInt;
   NxHook: PByte;
+  LTlsRecursionLevelIndex: DWORD;
 begin
   {
     Return a pointer to a function that can
@@ -2117,8 +2118,13 @@ begin
   PNextHook(Result)^.Signature := TrampolineSignature;
   PNextHook(Result)^.InterceptOptions := Options;
   if ioRecursive in Options then
-    PNextHook(Result)^.TlsRecursionLevelIndex := TlsAlloc();
-
+  begin
+    LTlsRecursionLevelIndex := TlsAlloc();
+    if LTlsRecursionLevelIndex <> TLS_OUT_OF_INDEXES then
+      PNextHook(Result)^.TlsRecursionLevelIndex := LTlsRecursionLevelIndex
+    else
+      raise DetourException.Create(SErrorTlsOutOfIndexes);
+  end;
   Inc(Result, SizeOf(TNextHook));
 
   { Redirect code to InterceptProc ! }
