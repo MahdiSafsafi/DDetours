@@ -1,48 +1,47 @@
-{$DEFINE UseInline}
-{$DEFINE BuildThreadSafe}
-{$DEFINE UseGenerics}
-{$DEFINE UseMultiBytesNop}
-//Define HookInternalFuncs if you want to hook internal functions used by DDL core!
-{.$DEFINE HookInternalFuncs}
-//----------------------------------------------
+{.$DEFINE HOOK_INTERNAL_FUNCTIONS}   // hook internal functions.
 {$IFDEF FPC}
-  {$IFDEF CPU64}
-    {$IFNDEF CPUX64}
-      {$DEFINE CPUX64}
-    {$ENDIF !CPUX64}
-  {$ENDIF CPU64}
   {$ASMMODE INTEL}
-{$ENDIF FPC}
+{$ELSE !FPC}
 
-{$IFNDEF CPUX64}
-  {$IFNDEF CPUX86}
-    {$DEFINE CPUX86}
-  {$ENDIF !CPUX86}
-{$ENDIF !CPUX64}
+{$IF CompilerVersion >= 17.0}
+  {$DEFINE DELPHI_2005_UP}
+{$IFEND}
 
-{$IFDEF DEBUG}
-{$R+} // Range check On
+{$IF CompilerVersion >= 18.5}
+  {$DEFINE DELPHI_2007_UP}
+{$IFEND}
+
+{$IF CompilerVersion >= 20}
+  {$DEFINE DELPHI_2009_UP}
+{$IFEND}
+
+{$IF CompilerVersion >= 20}
+  {$DEFINE DELPHI_2010_UP}
+{$IFEND}
+
+{$IF CompilerVersion >= 23}
+  {$DEFINE DELPHI_XE2_UP}
+{$IFEND}
+
+{$IF CompilerVersion >= 33}
+  {$DEFINE DELPHI_RIO_UP}
+{$IFEND}
+
+{$IFDEF DELPHI_2005_UP}
+  {$DEFINE SUPPORTS_INLINE}
 {$ENDIF}
 
-{$IFNDEF FPC}
-  {$IF CompilerVersion >17}
-    {$DEFINE CanInline}
-  {$IFEND}
-  {$IF CompilerVersion >=21}
-    {$DEFINE GenericsExist }
-  {$IFEND}
-  {$IF CompilerVersion >=23}
-    {$DEFINE DXE2UP }
-  {$IFEND}  
-  {$IF CompilerVersion >=24}
-    {$DEFINE DXE3UP }
-  {$IFEND}    
-{$ENDIF !FPC}
+{$IFDEF DELPHI_2009_UP}
+  {$DEFINE SUPPORTS_GENERICS}
+{$ENDIF}
 
-{$IF DEFINED(UseInline) and DEFINED(CanInline)}
-  {$DEFINE MustInline}
-{$IFEND}
+{$IFDEF DELPHI_2010_UP}
+  {$DEFINE SUPPORTS_RTTI}
+{$ENDIF}
 
-{$IF DEFINED(GenericsExist) and DEFINED(UseGenerics)}
-  {$DEFINE MustUseGenerics}
-{$IFEND}
+{$IFDEF DELPHI_XE2_UP}
+  {$DEFINE RENAMED_NAMESPACE}
+{$ENDIF}
+
+{$ENDIF FPC}
+
