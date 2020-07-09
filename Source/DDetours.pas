@@ -2614,7 +2614,10 @@ begin
     if PStruct^.SuspendedThreadCount > 0 then
     begin
       for i := 0 to PStruct^.SuspendedThreadCount - 1 do
+      begin
         SuspendOrResumeThread(PStruct^.SuspendedThreads^[i], False);
+      end;
+      FreeMemory(PStruct^.SuspendedThreads);
     end;
     SetThreadPriority(GetCurrentThread(), PStruct^.ThreadPriority);
     FreeMemory(PTransactionStruct(Handle));
