@@ -34,6 +34,6 @@ It can decode instruction and getting information about the instruction (size of
 
 These two libraries were coded in pure Pascal language with Delphi XE7.
 
-See the [Wiki](https://github.com/MahdiSafsafi/delphi-detours-library/tree/wiki) page for more information about how to use the library.
+See the [Wiki](https://github.com/MahdiSafsafi/DDetours/wiki) page for more information about how to use the library.
 
 Please, if you find any bug, feel free to report it.
