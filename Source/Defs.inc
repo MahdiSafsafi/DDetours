@@ -1,7 +1,10 @@
 {.$DEFINE HOOK_INTERNAL_FUNCTIONS}   // hook internal functions.
+
 {$IFDEF FPC}
   {$ASMMODE INTEL}
 {$ELSE !FPC}
+
+{$T-}
 
 {$IF CompilerVersion >= 17.0}
   {$DEFINE DELPHI_2005_UP}

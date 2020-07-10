@@ -15,7 +15,9 @@
 
 unit DDetours;
 
+{define FIX_MADEXCEPT if you are using crash on buffer overrun/underrun feature from MadExcept }
 {.$DEFINE FIX_MADEXCEPT}
+
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$HINTS OFF}
