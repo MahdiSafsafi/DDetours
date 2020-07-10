@@ -15,6 +15,7 @@
 
 unit DDetours;
 
+{.$DEFINE FIX_MADEXCEPT}
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$HINTS OFF}
@@ -2080,6 +2081,23 @@ begin
   end;
 end;
 
+procedure MadExceptFreeMem(P: Pointer);
+var
+  Page: Pointer;
+  mbi: TMemoryBasicInformation;
+  Permission: DWORD;
+begin
+  if InternalFuncs.VirtualQuery(P, mbi, SizeOf(mbi)) <> 0 then
+  begin
+    Page := mbi.BaseAddress;
+    Permission := SetMemPermission(Page, SysInfo.dwPageSize, PAGE_READWRITE);
+    FreeMem(P);
+    SetMemPermission(Page, SysInfo.dwPageSize, Permission);
+  end
+  else
+    FreeMem(P);
+end;
+
 function GetNextHookPtrFromTrampoline(TrampoLine: Pointer): PNextHook;
 begin
   if Assigned(TrampoLine) then
@@ -2193,7 +2211,11 @@ begin
     end;
 
     FillNop(PDscr^, SizeOf(TDescriptor), False);
+{$IFDEF FIX_MADEXCEPT}
+    MadExceptFreeMem(PDscr);
+{$ELSE !FIX_MADEXCEPT}
     FreeMem(PDscr);
+{$ENDIF FIX_MADEXCEPT}
   finally
     SetMemPermission(P, sz, OrgAccess);
   end;
@@ -2235,7 +2257,12 @@ begin
   if ioRecursive in PNxtHook^.InterceptOptions then
     TlsFree(PNxtHook^.TlsRecursionLevelIndex);
 
-  FreeMem(PNxtHook);
+{$IFDEF FIX_MADEXCEPT}
+    MadExceptFreeMem(PNxtHook);
+{$ELSE !FIX_MADEXCEPT}
+    FreeMem(PNxtHook);
+{$ENDIF FIX_MADEXCEPT}
+
 end;
 
 { ======================================= InterceptCreate ======================================= }
