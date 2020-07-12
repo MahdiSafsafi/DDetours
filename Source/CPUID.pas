@@ -1,4 +1,4 @@
-﻿// **************************************************************************************************
+// **************************************************************************************************
 // CPUID for Delphi.
 // Unit CPUID
 // https://github.com/MahdiSafsafi/DDetours
@@ -19,7 +19,7 @@ unit CPUID;
 
 interface
 
-{$I Defs.inc}
+{$I DDetoursDefs.inc}
 
 uses
   SysUtils

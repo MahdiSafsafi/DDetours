@@ -52,7 +52,7 @@ unit InstDecode;
 
 interface
 
-{$I Defs.inc}
+{$I DDetoursDefs.inc}
 
 uses
   SysUtils,

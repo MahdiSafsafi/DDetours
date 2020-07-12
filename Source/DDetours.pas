@@ -33,7 +33,7 @@ unit DDetours;
 
 interface
 
-{$I Defs.inc}
+{$I DDetoursDefs.inc}
 
 uses
 

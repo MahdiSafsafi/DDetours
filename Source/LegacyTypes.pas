@@ -8,18 +8,20 @@ unit LegacyTypes;
 
 interface
 
-{$I Defs.inc}
+{$I DDetoursDefs.inc}
 
 type
 
 {$IFNDEF FPC}
-{$IFNDEF DELPHI_XE2_UP}
-  NativeInt = Integer;
-  NativeUInt = Cardinal;
+{$IFNDEF DELPHI_XE_UP}
+  NativeInt   = Integer;
+  NativeUInt  = Cardinal;
+  PNativeInt  = ^NativeInt;
+  PNativeUInt = ^NativeUInt;
 {$IFDEF MSWINDOWS}
   TThreadID = LongWord;
 {$ENDIF MSWINDOWS}
-{$ENDIF DELPHI_XE2_UP}
+{$ENDIF DELPHI_XE_UP}
 {$ENDIF FPC}
   Int8 = Shortint;
   Int16 = Smallint;
