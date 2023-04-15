@@ -121,6 +121,8 @@ const
   otJMP = $04; { JMP Instruction }
   otJ = $08;
   otJcc = $10; { Conditional JUMP Instruction }
+  otNop = $90;
+  otINT3 = $CC; 
 
   { OpKind }
   kGrp = $01;
@@ -356,6 +358,9 @@ function GetSib_Scale(const Value: Byte): Byte; {$IFDEF MustInline}inline; {$END
 function IsSibBaseRegValid(PInst: PInstruction): Boolean; {$IFDEF MustInline}inline; {$ENDIF}
 
 implementation
+
+uses
+  Windows;
 
 {$I OpCodesTables.inc}
 {$I ModRmFlagsTables.inc}
@@ -873,6 +878,63 @@ begin
 end;
 
 procedure Decode_Branch_ModRm(PInst: PInstruction);
+  function IsBadReadPtrEx(src: pointer; count: Cardinal; tryRead: THandle = 0) : boolean;
+    function CheckTryRead(tryRead: THandle; mem: pointer; len: integer) : byte;
+    type
+      TTryRead = record
+        areaBegin : NativeUInt;
+        areaEnd   : NativeUInt;
+        flags     : byte;
+      end;
+      TDATryRead = array of TTryRead;
+      TPDATryRead = ^TDATryRead;
+    var i1, i2, i3 : integer;
+        b1         : boolean;
+    begin
+      result := 0;
+      try
+        i3 := length(TPDATryRead(tryRead)^);
+        i1 := i3 div 2;
+        i2 := (i1 + 2) div 2;
+        b1 := false;
+        while i2 > 0 do
+          begin
+          if NativeUInt(mem) < TPDATryRead(tryRead)^[i1].areaBegin then
+            begin
+            dec(i1, i2);
+            if i1 < 0 then
+              i1 := 0;
+            end
+          else if NativeUInt(mem) + Cardinal(len) <= TPDATryRead(tryRead)^[i1].areaEnd then
+            begin
+            result := TPDATryRead(tryRead)^[i1].flags;
+            exit;
+            end
+          else
+            begin
+            inc(i1, i2);
+            if i1 >= i3 then
+              i1 := i3 - 1;
+            end;
+          if b1 then
+            break;
+          if i2 = 1 then
+            b1 := true
+          else
+            i2 := (i2 + 1) div 2;
+          end;
+      except
+      end;
+    end;
+  var
+    mbi : TMemoryBasicInformation;
+  begin
+    if tryRead <> 0 then
+      result := CheckTryRead(tryRead, src, count) = 2
+    else
+      result := (VirtualQuery(src, mbi, sizeOf(mbi)) <> sizeOf(mbi)) or (mbi.State <> MEM_COMMIT) or (mbi.Protect and (PAGE_EXECUTE_READ or PAGE_EXECUTE_READWRITE or PAGE_READONLY or PAGE_READWRITE or PAGE_WRITECOPY) = 0) or (mbi.Protect and PAGE_GUARD <> 0) or
+                (NativeUInt(src) + count > NativeUInt(mbi.BaseAddress) + mbi.RegionSize);
+  end;
 var
   P: PByte;
   VA: PByte;
@@ -905,11 +967,21 @@ begin
       { No RIP }
       P := PByte(UInt32(PInst^.Disp.Value));
       if PInst^.Prefixes and Prf_OpSize <> 0 then
+        begin
         { Memory 16-bits }
-        PInst^.Branch.Target := PByte(PUInt16(P)^)
+        if IsBadReadPtrEx( P, 2 ) then
+          PInst^.Branch.Target := 0
+        else
+          PInst^.Branch.Target := PByte(PUInt16(P)^)
+        end
       else
+        begin
         { Memory 32-bits }
-        PInst^.Branch.Target := PByte(PUInt32(P)^);
+        if IsBadReadPtrEx( P, 4 ) then
+          PInst^.Branch.Target := 0
+        else
+          PInst^.Branch.Target := PByte(PUInt32(P)^);
+        end;
     end;
   end
   else
